@@ -113,8 +113,7 @@ private:
     {
         unsigned entry:10;
 
-    };
-    history_t history[1024];
+    } history[1024];
     SaturationCounter counter[1024];
 };
 
