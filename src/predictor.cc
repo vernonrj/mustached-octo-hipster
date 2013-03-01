@@ -39,9 +39,13 @@ void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os
 
 
 // private classes
+    
+    
+
 class SaturationCounter
 {
 public:
+    SaturationCounter() {}
     SaturationCounter(uint8_t numofbits, uint8_t initialValue = 0)
     {
         // Sanity Check parameters
@@ -74,6 +78,11 @@ public:
         return *this;
     }
 
+    bool Saturated()
+    {
+        return (m_CounterValue == (1 << m_SizeInBits));
+    }
+
     uint8_t GetMemoryUsage()
     {
         return m_SizeInBits;
@@ -85,6 +94,30 @@ private:
     uint8_t m_SizeInBits;
 };
 
+class LocalHistory
+{
+public:
+    LocalHistory()
+    {
+        int i;
+        for (i=0; i<1024; i++)
+            counter[i] = SaturationCounter(3, 0);
+    }
+    bool shouldBranch(uint32_t address)
+    {
+        uint32_t scindex = history[address].entry;
+        return counter[scindex].Saturated();
+    }
+private:
+    struct history_t
+    {
+        unsigned entry:10;
+
+    };
+    history_t history[1024];
+    SaturationCounter counter[1024];
+};
+
 // Static 'helper' functions - all functions below should be prefixed with 'static'
 
-
+// vim: et ts=4 sw=4
