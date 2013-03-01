@@ -101,7 +101,7 @@ public:
     {
         int i;
         for (i=0; i<1024; i++)
-            counter[i] = SaturationCounter(3, 0);
+            counter[i] = SaturationCounter(3, 2);
     }
     bool shouldBranch(uint32_t address)
     {
