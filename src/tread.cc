@@ -13,7 +13,7 @@ using namespace std;
 
 branch_record_c::branch_record_c(){
     instruction_addr      = 0x0;
-    branch_target         = 0x0;
+//    branch_target         = 0x0;
     instruction_next_addr = 0x0;
     is_indirect           = false;
     is_conditional        = false;
@@ -45,12 +45,15 @@ cbp_trace_reader_c::cbp_trace_reader_c(char *trace_name){
     osptr->init(osptr);
     // initialize some scalars 
     is_branch_tkn             = false;
+    branch_target			  = 0;
     predict_branch_tkn_copy   = false;
-    predict_valid             = false;
+    predict_branch_target_copy = 0;
+    predict_valid            = false;
     stat_num_branches         = 0;
     stat_num_cc_branches      = 0;
     stat_num_predicts         = 0;
-    stat_num_correct_predicts = 0;
+    stat_num_correct_bpredicts= 0;		/* branch predicts */
+    stat_num_correct_tpredicts= 0;		/* target predicts */
     stat_num_insts            = 0;
 
     memset(&cbp_inst, 0, sizeof(cbp_inst));
@@ -65,9 +68,12 @@ cbp_trace_reader_c::cbp_trace_reader_c(char *trace_name){
 
 cbp_trace_reader_c::~cbp_trace_reader_c(){
     printf("*********************************************************\n");
-    int   mis_preds     = (stat_num_cc_branches - stat_num_correct_predicts);
-    float mis_pred_rate = float(mis_preds)/(float(stat_num_insts) / 1000);
-    printf("1000*wrong_cc_predicts/total insts: 1000 * %8d / %8d = %7.3f\n", mis_preds, stat_num_insts, mis_pred_rate);
+    int   mis_bpreds     = (stat_num_cc_branches - stat_num_correct_bpredicts);
+    int   mis_tpreds	 = (stat_num_branches - stat_num_correct_tpredicts);
+    float mis_bpred_rate = float(mis_bpreds)/(float(stat_num_insts) / 1000);
+    float mis_tpred_rate = float(mis_tpreds)/(float(stat_num_insts) / 1000);
+    printf("1000*wrong_cc_bpredicts/total insts: 1000 * %8d / %8d = %7.3f\n", mis_bpreds, stat_num_insts, mis_bpred_rate);
+    printf("1000*wrong_tpredicts/total insts: 1000 * %8d / %8d = %7.3f\n", mis_tpreds, stat_num_insts, mis_tpred_rate);    
     printf("total branches:                  %8d\n", stat_num_branches);
     printf("total cc branches:               %8d\n", stat_num_cc_branches);
     printf("total predicts:                  %8d\n", stat_num_predicts);
@@ -77,13 +83,15 @@ cbp_trace_reader_c::~cbp_trace_reader_c(){
     delete osptr;
 }
 
-bool cbp_trace_reader_c::predict_branch(bool predict_branch_tkn){
+bool cbp_trace_reader_c::predict_branch(bool predict_branch_tkn, uint *predict_branch_target){
     if(predict_valid){
         printf("*******Multiple predictions made, you've called predict_branch more than once for the same branch!*******\n");
     }
     else{
         predict_valid           = true;
         predict_branch_tkn_copy = predict_branch_tkn;
+        predict_branch_target_copy = *predict_branch_target;
+        *predict_branch_target = branch_target;  // return actual target
     }
     return is_branch_tkn;
 }
@@ -101,9 +109,12 @@ bool cbp_trace_reader_c::get_branch_record(branch_record_c *branch_record){
             if(branch_record->is_conditional){
                 stat_num_predicts++;
                 if(predict_branch_tkn_copy == is_branch_tkn){ // correct prediction
-                    stat_num_correct_predicts++;
+                    stat_num_correct_bpredicts++;
                 }
             }
+            if((predict_branch_target_copy == branch_target) || (is_branch_tkn)){ // correct target prediction
+            		stat_num_correct_tpredicts++;
+            	}
         }
     }
     // init cbp_inst
@@ -169,13 +180,14 @@ bool cbp_trace_reader_c::get_branch_record(branch_record_c *branch_record){
     assert(op);
     assert(op->instruction_addr == cbp_inst.instruction_addr);
     branch_record->instruction_addr      = cbp_inst.instruction_addr;
-    branch_record->branch_target         = cbp_inst.branch_target;
+//    branch_record->branch_target         = cbp_inst.branch_target;
     branch_record->instruction_next_addr = cbp_inst.instruction_next_addr;
     branch_record->is_indirect           = cbp_inst.is_indirect;
     branch_record->is_conditional        = cbp_inst.is_conditional;
     branch_record->is_call               = cbp_inst.is_call;
     branch_record->is_return             = cbp_inst.is_return;
     is_branch_tkn                        = cbp_inst.taken;
+    branch_target						 = cbp_inst.branch_target;
     predict_valid                        = false;
     stat_num_branches++;
     if(branch_record->is_conditional){

@@ -1,5 +1,8 @@
 // vim: textwidth=80
 
+Hacked by Mark Faust February 2013 to support Branch Target Buffer project
+
+
 Welcome to the third version of the cbp framework.  We believe this is the final
 version.  However, if there are features that you require for your branch
 predictor that are not yet included, let us (Chris Wilkerson and Jared Stark)
