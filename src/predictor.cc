@@ -18,8 +18,8 @@ static int getenvironmentint(const char* env_name, int defaultvalue);
 PREDICTOR::PREDICTOR()
 {
     //get environment variables to setup cache - remember to keep track of mem usage
-    const char* predictor_callstack_size = getenv("predictor_callstack_size");
     m_callstack.resize(getenvironmentint("predictor_callstack_size", 4));
+    m_callstack.push(5); //test stack
 }
 
 PREDICTOR::~PREDICTOR()
