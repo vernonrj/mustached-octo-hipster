@@ -36,11 +36,14 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
     if (br->is_call)
     {
         //push address onto stack
+        m_callstack.push(br->branch_target);
         return true;
     }
     else if (br->is_return)
     {
         //pop address from stack
+        // *address = m_callstack.pop();
+        m_callstack.pop();
         return true;
     }
     else if (br->is_conditional)

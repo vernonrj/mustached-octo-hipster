@@ -34,7 +34,6 @@ public:
    T pop()
    {
       T topelement = m_datavector[m_top];
-      size_t stacksize = m_datavector.size();
       m_top = (m_top == 0) ? m_datavector.size() : m_top - 1; 
       return topelement;
    }
