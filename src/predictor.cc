@@ -3,26 +3,53 @@
 */
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "SaturationCounter.h"
 #include "predictor.h"
 
 // tuning parameters
 
 // forward declarations
-
+static int getenvironmentint(const char* env_name, int defaultvalue);
 // Static local datastructures. 
+
+
+
+PREDICTOR::PREDICTOR()
+{
+    //get environment variables to setup cache - remember to keep track of mem usage
+    const char* predictor_callstack_size = getenv("predictor_callstack_size");
+    m_callstack.resize(getenvironmentint("predictor_callstack_size", 4));
+}
+
+PREDICTOR::~PREDICTOR()
+{
+
+}
 
 bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
 {
-    /* replace this code with your own */
-    bool prediction = false;
-
     printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,
            br->branch_target,br->is_indirect,br->is_conditional,
            br->is_call,br->is_return);
-    if (br->is_conditional)
-        prediction = true;
-    return prediction;   // true for taken, false for not taken
+
+    if (br->is_call)
+    {
+        //push address onto stack
+        return true;
+    }
+    else if (br->is_return)
+    {
+        //pop address from stack
+        return true;
+    }
+    else if (br->is_conditional)
+    {
+        // TODO alpha predictor
+        return true;
+    }
+    // instruction not branch
+    return false;
 }
 
 
@@ -65,5 +92,16 @@ private:
 };
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
+static int getenvironmentint(const char* env_name, int defaultvalue = 0)
+{
+    const char* env_variable = getenv(env_name);
+    int integer = defaultvalue;
+    if(env_variable)
+    {
+       sscanf(env_variable, "%d", &integer);
+    }
 
-// vim: et ts=4 sw=4
+    return integer;
+}
+
+
