@@ -31,13 +31,13 @@ PREDICTOR::~PREDICTOR()
 bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, uint *predicted_target_address)
 {
     printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,
-           br->branch_target,br->is_indirect,br->is_conditional,
+           *predicted_target_address,br->is_indirect,br->is_conditional,
            br->is_call,br->is_return);
 
     if (br->is_call)
     {
         //push address onto stack
-        m_callstack.push(br->branch_target);
+        m_callstack.push(*predicted_target_address);
         return true;
     }
     else if (br->is_return)
