@@ -111,16 +111,25 @@ public:
     {
         for (int i=0; i<1024; i++)
 	{
-            counter[i] = SaturationCounter(3, 2);
+        counter[i] = SaturationCounter(3, 2);
 	    history[i] = BranchHistory();
 	}
     }
     bool shouldBranch(uint32_t address)
     {
 	// Get prediction
-	uint32_t mask_address = address & 0x3FF;
+        uint32_t mask_address = address & 0x3FF;
         uint32_t scindex = history[mask_address].getHistory();
         return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
+    }
+    void updatePredictor(uint32_t address, uint8_t outcome)
+    {
+        uint32_t mask_address = address & 0x3FF;
+        uint32_t scindex = history[mask_address].getHistory();
+        if (outcome)    // taken
+            ++counter[scindex];
+        else            // not taken
+            --counter[scindex];
     }
 private:
     BranchHistory history[1024];
