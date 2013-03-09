@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "SaturationCounter.h"
+#include "TournamentPredictor.h"
 #include "predictor.h"
 
 // tuning parameters
@@ -26,6 +27,8 @@ PREDICTOR::~PREDICTOR()
 {
 
 }
+
+TournamentPredictor tpredict = TournamentPredictor();
 
 //bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
 bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, uint *predicted_target_address)
@@ -50,7 +53,8 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, 
     else if (br->is_conditional)
     {
         // TODO alpha predictor
-        return true;
+        return tpredict.shouldBranch(br->instruction_addr);
+        //return true;
     }
     // instruction not branch
     return false;
@@ -68,106 +72,13 @@ void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os
 {
     /* replace this code with your own */
     printf("%1d\n",taken);
-
+    tpredict.updatePredictor(actual_target_address, taken);
 }
 
 
 // private classes
 
 
-
-class BranchHistory
-{
-public:
-	BranchHistory()
-	{
-		history.entry = 0x0;
-	}
-	uint16_t getHistory()
-	{
-		// Should we return this,
-		// or use inheritance?
-		return history.entry;
-	}
-	void updateHistory(uint8_t new_entry)
-	{
-		history.entry = history.entry << 1;
-		history.entry |= (new_entry & 0x1);
-		return;
-	}
-private:
-	struct history_t
-	{
-		unsigned entry:10;
-	} history;
-};
-
-
-class LocalHistory
-{
-// Class to manage local history 
-public:
-    LocalHistory()
-    {
-        for (int i=0; i<1024; i++)
-        {
-            counter[i] = SaturationCounter(3, 4);
-            history[i] = BranchHistory();
-        }
-    }
-    bool shouldBranch(uint32_t address)
-    {
-        // Get prediction
-        uint32_t mask_address = address & 0x3FF;
-        uint32_t scindex = history[mask_address].getHistory();
-        return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
-    }
-    void updatePredictor(uint32_t address, uint8_t outcome)
-    {
-        uint32_t mask_address = address & 0x3FF;
-        uint32_t scindex = history[mask_address].getHistory();
-        if (outcome)    // taken
-            ++counter[scindex];
-        else            // not taken
-            --counter[scindex];
-    }
-private:
-    BranchHistory history[1024];
-    SaturationCounter counter[1024];
-};
-
-
-class GlobalHistory
-{
-// class to manage global history
-public:
-    GlobalHistory()
-    {
-        int i;
-        ghistory = BranchHistory();
-        for (i=0; i<1024; i++)
-            counter[i] = SaturationCounter(2, 2);
-    }
-    bool shouldBranch()
-    {
-        // Get prediction
-        uint32_t scindex = ghistory.getHistory();
-        return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
-    }
-    void updatePredictor(uint8_t outcome)
-    {
-        uint32_t scindex = ghistory.getHistory();
-        if (outcome)
-            ++counter[scindex];
-        else
-            --counter[scindex];
-        ghistory.updateHistory(outcome);
-        return;
-    }
-private:
-    BranchHistory ghistory;
-    SaturationCounter counter[1024];
-};
 
 
 
