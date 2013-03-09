@@ -54,6 +54,7 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, 
     {
         // TODO alpha predictor
         return tpredict.shouldBranch(br->instruction_addr);
+        //return false;
         //return true;
     }
     // instruction not branch

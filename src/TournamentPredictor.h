@@ -46,7 +46,7 @@ public:
         // Get prediction
         uint32_t mask_address = address & 0x3FF;
         uint32_t scindex = history[mask_address].getHistory();
-        return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
+        return counter[scindex]() > (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint32_t address, uint8_t outcome)
     {
@@ -78,7 +78,7 @@ public:
     {
         // Get prediction
         uint32_t scindex = ghistory.getHistory();
-        return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
+        return counter[scindex]() > (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint8_t outcome)
     {
