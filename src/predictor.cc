@@ -110,14 +110,14 @@ public:
     LocalHistory()
     {
         for (int i=0; i<1024; i++)
-	{
-        counter[i] = SaturationCounter(3, 2);
-	    history[i] = BranchHistory();
-	}
+        {
+            counter[i] = SaturationCounter(3, 4);
+            history[i] = BranchHistory();
+        }
     }
     bool shouldBranch(uint32_t address)
     {
-	// Get prediction
+        // Get prediction
         uint32_t mask_address = address & 0x3FF;
         uint32_t scindex = history[mask_address].getHistory();
         return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
@@ -135,6 +135,41 @@ private:
     BranchHistory history[1024];
     SaturationCounter counter[1024];
 };
+
+
+class GlobalHistory
+{
+// class to manage global history
+public:
+    GlobalHistory()
+    {
+        int i;
+        ghistory = BranchHistory();
+        for (i=0; i<1024; i++)
+            counter[i] = SaturationCounter(2, 2);
+    }
+    bool shouldBranch()
+    {
+        // Get prediction
+        uint32_t scindex = ghistory.getHistory();
+        return counter[scindex]() < (counter[scindex].GetCounterValue() >> 1);
+    }
+    void updatePredictor(uint8_t outcome)
+    {
+        uint32_t scindex = ghistory.getHistory();
+        if (outcome)
+            ++counter[scindex];
+        else
+            --counter[scindex];
+        ghistory.updateHistory(outcome);
+        return;
+    }
+private:
+    BranchHistory ghistory;
+    SaturationCounter counter[1024];
+};
+
+
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
 static int getenvironmentint(const char* env_name, int defaultvalue = 0)
