@@ -96,6 +96,33 @@ private:
     SaturationCounter counter[1024];
 };
 
+
+class BranchHistory
+{
+public:
+	BranchHistory()
+	{
+		history.entry = 0x0;
+	}
+	uint16_t getHistory()
+	{
+		// Should we return this,
+		// or use inheritance?
+		return history.entry;
+	}
+	void updateHistory(uint8_t new_entry)
+	{
+		history.entry = history.entry << 1;
+		history.entry |= (new_entry & 0x1);
+		return;
+	}
+private:
+	struct history_t
+	{
+		unsigned entry:10;
+	} history;
+};
+
 // Static 'helper' functions - all functions below should be prefixed with 'static'
 static int getenvironmentint(const char* env_name, int defaultvalue = 0)
 {
