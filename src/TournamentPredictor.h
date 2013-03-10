@@ -75,7 +75,6 @@ class GlobalHistory
 public:
     GlobalHistory()
     {
-        //ghistory = BranchHistory();
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
             counter[i] = SaturationCounter(2, 2);
     }
@@ -87,18 +86,17 @@ public:
     }
     void updatePredictor(BranchHistory ghistory, uint8_t outcome)
     {
+        // Update Saturating Counter based on outcome
         uint32_t scindex = ghistory.getHistory();
         if (outcome)		// taken
             ++counter[scindex];
         else 			// not taken
             --counter[scindex];
-        //ghistory.updateHistory(outcome);
         return;
     }
 private:
     static const uint32_t HISTORY_BITS = 12;
     static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
-    //BranchHistory ghistory;
     SaturationCounter counter[HISTORY_SIZE];
 };
 
@@ -113,19 +111,18 @@ public:
          tourn_hist(GlobalHistory()),
          path_history(BranchHistory()),
          instruction_addr(0x0)
-    {
-        //ghistory = GlobalHistory();
-        //lhistory = LocalHistory();
-        //tourn_hist = GlobalHistory();
-        //instruction_addr = 0x0;
-        //path_history = BranchHistory();
-    }
+    {}
     bool shouldBranch(uint32_t address)
     {
+        // Test whether we should branch
+        
+        // debug variable; TODO: check to see if address is byte-aligned
         uint32_t word_address = address;
+        // Get predictions from local, global, and tournament
         bool lpredict = lhistory.shouldBranch(word_address);
         bool gpredict = ghistory.shouldBranch(path_history);
         bool choose_global = tourn_hist.shouldBranch(path_history);
+        // Remember the address for updating
         instruction_addr = address;
 
         return (choose_global ? gpredict : lpredict);
@@ -133,6 +130,7 @@ public:
     void updatePredictor(uint8_t outcome)
     {
         // check what we predicted
+        // First get what our predictions were
         BranchHistory old_history(path_history);
         uint32_t word_address = instruction_addr;
         bool lpredict = lhistory.shouldBranch(word_address);
@@ -140,7 +138,7 @@ public:
         bool choose_global = tourn_hist.shouldBranch(old_history);
         bool predicted_taken = shouldBranch(instruction_addr);
 
-        // Update stats
+        // Update local and global predictors 
         path_history.updateHistory(outcome);
         lhistory.updatePredictor(word_address, outcome);
         ghistory.updatePredictor(old_history, outcome);
@@ -156,6 +154,7 @@ public:
 
         // Predictors predicted differently.
         // update tournament predictor
+        // based on whether outcome was correctly predicted
         if (outcome == predicted_taken)
         {
             // outcome was predicted correctly
