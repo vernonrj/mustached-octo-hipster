@@ -53,6 +53,7 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, 
     }
     else if (br->is_conditional)
     {
+        printf("%1d ", tpredict.shouldBranch(br->instruction_addr));
         return tpredict.shouldBranch(br->instruction_addr);
         //return false;
         //return true;

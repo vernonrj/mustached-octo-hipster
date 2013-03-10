@@ -44,7 +44,7 @@ public:
     bool shouldBranch(uint32_t address)
     {
         // Get prediction
-        uint32_t mask_value = (1 << (HISTORY_BITS+1)) - 1;
+        uint32_t mask_value = (1 << HISTORY_BITS) - 1;
         //uint32_t mask_address = address & 0x3FF;
         uint32_t mask_address = address & mask_value;
         uint32_t scindex = history[mask_address].getHistory();
@@ -52,13 +52,14 @@ public:
     }
     void updatePredictor(uint32_t address, uint8_t outcome)
     {
-        uint32_t mask_value = (1 << (HISTORY_BITS+1)) - 1;
+        uint32_t mask_value = (1 << HISTORY_BITS) - 1;
         uint32_t mask_address = address & mask_value;
         uint32_t scindex = history[mask_address].getHistory();
         if (outcome)    // taken
             ++counter[scindex];
         else            // not taken
             --counter[scindex];
+        history[mask_address].updateHistory(outcome);
     }
 private:
     static const uint8_t HISTORY_BITS = 10;
@@ -132,13 +133,19 @@ public:
         bool gpredict = ghistory.shouldBranch(path_history);
         bool choose_global = tourn_hist.shouldBranch(path_history);
         bool predicted_taken = shouldBranch(instruction_addr);
+        BranchHistory old_history(path_history);
 
+        // Update stats
+        path_history.updateHistory(outcome);
         lhistory.updatePredictor(word_address, outcome);
-        ghistory.updatePredictor(path_history, outcome);
+        ghistory.updatePredictor(old_history, outcome);
         instruction_addr = 0x0;
+
+
         if (lpredict == gpredict)
         {
-            path_history.updateHistory(outcome);
+            // Both predictors predicted similarly
+            // Don't update the tournament predictor
             return;
         }
 
@@ -147,23 +154,22 @@ public:
         {
             // outcome was predicted correctly
             // unused predictor mispredicted
-            tourn_hist.updatePredictor(path_history, choose_global);
+            tourn_hist.updatePredictor(old_history, choose_global);
         }
         else
         {
             // outcome was not predicted correctly
             // unused predictor correctly predicted
-            tourn_hist.updatePredictor(path_history, !choose_global);
+            tourn_hist.updatePredictor(old_history, !choose_global);
         }
-        path_history.updateHistory(outcome);
         return;
     }
 private:
-    GlobalHistory ghistory;
-    LocalHistory lhistory;
-    GlobalHistory tourn_hist;
-    BranchHistory path_history;
-    uint32_t instruction_addr;
+    GlobalHistory ghistory;         // Global History
+    LocalHistory lhistory;          // Local History
+    GlobalHistory tourn_hist;       // Tournament History
+    BranchHistory path_history;     // Global Path History
+    uint32_t instruction_addr;      // Instruction Address
 };
 
 
