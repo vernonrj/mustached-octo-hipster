@@ -35,7 +35,7 @@ class LocalHistory
 public:
     LocalHistory()
     {
-        for (int i=0; i<1024; i++)
+        for (uint32_t i=0; i<HISTORY_SIZE; i++)
         {
             counter[i] = SaturationCounter(3, 3);
             history[i] = BranchHistory();
@@ -44,13 +44,16 @@ public:
     bool shouldBranch(uint32_t address)
     {
         // Get prediction
-        uint32_t mask_address = address & 0x3FF;
+        uint32_t mask_value = (1 << (HISTORY_BITS+1)) - 1;
+        //uint32_t mask_address = address & 0x3FF;
+        uint32_t mask_address = address & mask_value;
         uint32_t scindex = history[mask_address].getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint32_t address, uint8_t outcome)
     {
-        uint32_t mask_address = address & 0x3FF;
+        uint32_t mask_value = (1 << (HISTORY_BITS+1)) - 1;
+        uint32_t mask_address = address & mask_value;
         uint32_t scindex = history[mask_address].getHistory();
         if (outcome)    // taken
             ++counter[scindex];
@@ -58,8 +61,10 @@ public:
             --counter[scindex];
     }
 private:
-    BranchHistory history[1024];
-    SaturationCounter counter[1024];
+    static const uint8_t HISTORY_BITS = 10;
+    static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
+    BranchHistory history[HISTORY_SIZE];
+    SaturationCounter counter[HISTORY_SIZE];
 };
 
 
@@ -69,9 +74,8 @@ class GlobalHistory
 public:
     GlobalHistory()
     {
-        int i;
         ghistory = BranchHistory();
-        for (i=0; i<4096; i++)
+        for (uint32_t i=0; i<HISTORY_SIZE; i++)
             counter[i] = SaturationCounter(2, 1);
     }
     bool shouldBranch()
@@ -91,8 +95,10 @@ public:
         return;
     }
 private:
+    static const uint32_t HISTORY_BITS = 12;
+    static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
     BranchHistory ghistory;
-    SaturationCounter counter[4096];
+    SaturationCounter counter[HISTORY_SIZE];
 };
 
 
@@ -105,6 +111,7 @@ public:
         ghistory = GlobalHistory();
         lhistory = LocalHistory();
         tourn_hist = GlobalHistory();
+        instruction_addr = 0x0;
     }
     bool shouldBranch(uint32_t address)
     {
@@ -126,6 +133,7 @@ public:
         bool gpredict = ghistory.shouldBranch();
         bool choose_global = tourn_hist.shouldBranch();
         bool predicted_taken = shouldBranch(instruction_addr);
+        instruction_addr = 0x0;
 
         lhistory.updatePredictor(word_address, outcome);
         ghistory.updatePredictor(outcome);
@@ -136,6 +144,7 @@ public:
         if (outcome == predicted_taken)
         {
             // outcome was predicted correctly
+            // unused predictor mispredicted
             if (choose_global)
                 tourn_hist.updatePredictor(true);
             else
@@ -144,6 +153,7 @@ public:
         else
         {
             // outcome was not predicted correctly
+            // unused predictor correctly predicted
             if (choose_global)
                 tourn_hist.updatePredictor(false);
             else
