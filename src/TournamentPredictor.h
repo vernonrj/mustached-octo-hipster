@@ -37,7 +37,7 @@ public:
     {
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
         {
-            counter[i] = SaturationCounter(3, 3);
+            counter[i] = SaturationCounter(3, 4);
             history[i] = BranchHistory();
         }
     }
@@ -74,30 +74,30 @@ class GlobalHistory
 public:
     GlobalHistory()
     {
-        ghistory = BranchHistory();
+        //ghistory = BranchHistory();
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
-            counter[i] = SaturationCounter(2, 1);
+            counter[i] = SaturationCounter(2, 2);
     }
-    bool shouldBranch()
+    bool shouldBranch(BranchHistory ghistory)
     {
         // Get prediction
         uint32_t scindex = ghistory.getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
-    void updatePredictor(uint8_t outcome)
+    void updatePredictor(BranchHistory ghistory, uint8_t outcome)
     {
         uint32_t scindex = ghistory.getHistory();
-        if (outcome)
+        if (outcome)		// taken
             ++counter[scindex];
-        else
+        else 			// not taken
             --counter[scindex];
-        ghistory.updateHistory(outcome);
+        //ghistory.updateHistory(outcome);
         return;
     }
 private:
     static const uint32_t HISTORY_BITS = 12;
     static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
-    BranchHistory ghistory;
+    //BranchHistory ghistory;
     SaturationCounter counter[HISTORY_SIZE];
 };
 
@@ -112,59 +112,57 @@ public:
         lhistory = LocalHistory();
         tourn_hist = GlobalHistory();
         instruction_addr = 0x0;
+        path_history = BranchHistory();
     }
     bool shouldBranch(uint32_t address)
     {
         uint32_t word_address = address;
         bool lpredict = lhistory.shouldBranch(word_address);
-        bool gpredict = ghistory.shouldBranch();
-        bool choose_global = tourn_hist.shouldBranch();
+        bool gpredict = ghistory.shouldBranch(path_history);
+        bool choose_global = tourn_hist.shouldBranch(path_history);
         instruction_addr = address;
-        if (choose_global)
-            return gpredict;
-        else
-            return lpredict;
+
+        return (choose_global ? gpredict : lpredict);
     }
     void updatePredictor(uint8_t outcome)
     {
         // check what we predicted
         uint32_t word_address = instruction_addr;
         bool lpredict = lhistory.shouldBranch(word_address);
-        bool gpredict = ghistory.shouldBranch();
-        bool choose_global = tourn_hist.shouldBranch();
+        bool gpredict = ghistory.shouldBranch(path_history);
+        bool choose_global = tourn_hist.shouldBranch(path_history);
         bool predicted_taken = shouldBranch(instruction_addr);
-        instruction_addr = 0x0;
 
         lhistory.updatePredictor(word_address, outcome);
-        ghistory.updatePredictor(outcome);
+        ghistory.updatePredictor(path_history, outcome);
+        instruction_addr = 0x0;
         if (lpredict == gpredict)
+        {
+            path_history.updateHistory(outcome);
             return;
+        }
 
         // update tournament predictor
         if (outcome == predicted_taken)
         {
             // outcome was predicted correctly
             // unused predictor mispredicted
-            if (choose_global)
-                tourn_hist.updatePredictor(true);
-            else
-                tourn_hist.updatePredictor(false);
+            tourn_hist.updatePredictor(path_history, choose_global);
         }
         else
         {
             // outcome was not predicted correctly
             // unused predictor correctly predicted
-            if (choose_global)
-                tourn_hist.updatePredictor(false);
-            else
-                tourn_hist.updatePredictor(true);
+            tourn_hist.updatePredictor(path_history, !choose_global);
         }
+        path_history.updateHistory(outcome);
         return;
     }
 private:
     GlobalHistory ghistory;
     LocalHistory lhistory;
     GlobalHistory tourn_hist;
+    BranchHistory path_history;
     uint32_t instruction_addr;
 };
 
