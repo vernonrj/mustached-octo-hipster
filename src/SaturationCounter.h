@@ -21,6 +21,8 @@ public:
 
         if(initialValue > (1 << numofbits))
             m_CounterValue = 1;
+        else
+            m_CounterValue = initialValue;
 
         m_SizeInBits = numofbits;
     }
