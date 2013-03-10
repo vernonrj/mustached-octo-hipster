@@ -177,4 +177,5 @@ private:
     uint32_t instruction_addr;      // Instruction Address
 };
 
+// vim: ts=4 et sw=4:
 

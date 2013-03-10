@@ -97,4 +97,5 @@ static int getenvironmentint(const char* env_name, int defaultvalue = 0)
     return integer;
 }
 
+// vim: ts=4 et sw=4:
 
