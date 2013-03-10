@@ -108,12 +108,17 @@ class TournamentPredictor
 // class to manage global and local history
 public:
     TournamentPredictor()
+        :ghistory(GlobalHistory()),
+         lhistory(LocalHistory()),
+         tourn_hist(GlobalHistory()),
+         path_history(BranchHistory()),
+         instruction_addr(0x0)
     {
-        ghistory = GlobalHistory();
-        lhistory = LocalHistory();
-        tourn_hist = GlobalHistory();
-        instruction_addr = 0x0;
-        path_history = BranchHistory();
+        //ghistory = GlobalHistory();
+        //lhistory = LocalHistory();
+        //tourn_hist = GlobalHistory();
+        //instruction_addr = 0x0;
+        //path_history = BranchHistory();
     }
     bool shouldBranch(uint32_t address)
     {
