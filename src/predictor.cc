@@ -40,7 +40,8 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, 
     if (br->is_call)
     {
         //push address onto stack
-        m_callstack.push(*predicted_target_address);
+        //m_callstack.push(*predicted_target_address);
+        m_callstack.push(br->instruction_addr);
         return true;
     }
     else if (br->is_return)
@@ -52,7 +53,6 @@ bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, 
     }
     else if (br->is_conditional)
     {
-        // TODO alpha predictor
         return tpredict.shouldBranch(br->instruction_addr);
         //return false;
         //return true;
@@ -73,7 +73,7 @@ void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os
 {
     /* replace this code with your own */
     printf("%1d\n",taken);
-    tpredict.updatePredictor(actual_target_address, taken);
+    tpredict.updatePredictor(taken);
 }
 
 

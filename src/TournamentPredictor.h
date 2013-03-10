@@ -37,7 +37,7 @@ public:
     {
         for (int i=0; i<1024; i++)
         {
-            counter[i] = SaturationCounter(3, 4);
+            counter[i] = SaturationCounter(3, 3);
             history[i] = BranchHistory();
         }
     }
@@ -46,7 +46,7 @@ public:
         // Get prediction
         uint32_t mask_address = address & 0x3FF;
         uint32_t scindex = history[mask_address].getHistory();
-        return counter[scindex]() > (counter[scindex].GetCounterMax() >> 1);
+        return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint32_t address, uint8_t outcome)
     {
@@ -72,13 +72,13 @@ public:
         int i;
         ghistory = BranchHistory();
         for (i=0; i<4096; i++)
-            counter[i] = SaturationCounter(2, 2);
+            counter[i] = SaturationCounter(2, 1);
     }
     bool shouldBranch()
     {
         // Get prediction
         uint32_t scindex = ghistory.getHistory();
-        return counter[scindex]() > (counter[scindex].GetCounterMax() >> 1);
+        return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint8_t outcome)
     {
@@ -108,22 +108,26 @@ public:
     }
     bool shouldBranch(uint32_t address)
     {
-        bool lpredict = lhistory.shouldBranch(address);
+        uint32_t word_address = address;
+        bool lpredict = lhistory.shouldBranch(word_address);
         bool gpredict = ghistory.shouldBranch();
         bool choose_global = tourn_hist.shouldBranch();
+        instruction_addr = address;
         if (choose_global)
             return gpredict;
         else
             return lpredict;
     }
-    void updatePredictor(uint32_t address, uint8_t outcome)
+    void updatePredictor(uint8_t outcome)
     {
-        bool lpredict = lhistory.shouldBranch(address);
+        // check what we predicted
+        uint32_t word_address = instruction_addr;
+        bool lpredict = lhistory.shouldBranch(word_address);
         bool gpredict = ghistory.shouldBranch();
         bool choose_global = tourn_hist.shouldBranch();
-        bool predicted_taken = shouldBranch(address);
+        bool predicted_taken = shouldBranch(instruction_addr);
 
-        lhistory.updatePredictor(address, outcome);
+        lhistory.updatePredictor(word_address, outcome);
         ghistory.updatePredictor(outcome);
         if (lpredict == gpredict)
             return;
@@ -151,6 +155,7 @@ private:
     GlobalHistory ghistory;
     LocalHistory lhistory;
     GlobalHistory tourn_hist;
+    uint32_t instruction_addr;
 };
 
 
