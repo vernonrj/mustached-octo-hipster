@@ -133,12 +133,12 @@ public:
     void updatePredictor(uint8_t outcome)
     {
         // check what we predicted
+        BranchHistory old_history(path_history);
         uint32_t word_address = instruction_addr;
         bool lpredict = lhistory.shouldBranch(word_address);
-        bool gpredict = ghistory.shouldBranch(path_history);
-        bool choose_global = tourn_hist.shouldBranch(path_history);
+        bool gpredict = ghistory.shouldBranch(old_history);
+        bool choose_global = tourn_hist.shouldBranch(old_history);
         bool predicted_taken = shouldBranch(instruction_addr);
-        BranchHistory old_history(path_history);
 
         // Update stats
         path_history.updateHistory(outcome);
@@ -149,11 +149,12 @@ public:
 
         if (lpredict == gpredict)
         {
-            // Both predictors predicted similarly
-            // Don't update the tournament predictor
+            // Both predictors predicted the same outcome.
+            // Don't need to update the tournament predictor
             return;
         }
 
+        // Predictors predicted differently.
         // update tournament predictor
         if (outcome == predicted_taken)
         {
