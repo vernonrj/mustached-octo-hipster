@@ -101,7 +101,7 @@ void PREDICTOR::update_predictor(
     /* replace this code with your own */
     //printf("%1d\n",taken);
     if (br->is_conditional)
-        m_TournamentPredictor.updatePredictor(taken);
+        m_TournamentPredictor.updatePredictor(br->instruction_addr, taken);
 }
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
