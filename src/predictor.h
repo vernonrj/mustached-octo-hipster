@@ -11,6 +11,7 @@
 #include <inttypes.h>
 #include "predictor_statistics.h"
 #include "circular_stack.h"
+#include "TournamentPredictor.h"
 #include "op_state.h"   // defines op_state_c (architectural state) class 
 #include "tread.h"      // defines branch_record_c class
 
@@ -30,7 +31,8 @@ public:
     //         const op_state_c* os, bool taken);
 private:
     PredictorStatistics m_statistics;
-    CircularStack<uint32_t> m_callstack;
+    TournamentPredictor m_TournamentPredictor;
+    CircularStack<uint> m_callstack;
 };
 
 #endif // PREDICTOR_H_SEEN

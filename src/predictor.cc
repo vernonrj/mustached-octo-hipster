@@ -20,7 +20,6 @@ PREDICTOR::PREDICTOR()
 {
     //get environment variables to setup cache - remember to keep track of mem usage
     m_callstack.resize(getenvironmentint("predictor_callstack_size", 4));
-    m_callstack.push(5); //test stack
 }
 
 PREDICTOR::~PREDICTOR()
@@ -28,61 +27,66 @@ PREDICTOR::~PREDICTOR()
 
 }
 
-TournamentPredictor tpredict = TournamentPredictor();
-
-//bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os)
-bool PREDICTOR::get_prediction(const branch_record_c* br, const op_state_c* os, uint *predicted_target_address)
+bool PREDICTOR::get_prediction(
+    const branch_record_c* br, 
+    const op_state_c* os, 
+    uint *predicted_target_address)
 {
-    printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,
+/*    printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,
            *predicted_target_address,br->is_indirect,br->is_conditional,
            br->is_call,br->is_return);
+*/
+    if(br->is_indirect)
+    {
+        printf("VALID assuption!\n");
+    }
+
 
     if (br->is_call)
     {
         //push address onto stack
-        //m_callstack.push(*predicted_target_address);
-        m_callstack.push(br->instruction_addr);
+        m_callstack.push(br->instruction_next_addr);
         return true;
     }
     else if (br->is_return)
     {
         //pop address from stack
-        // *address = m_callstack.pop();
-        m_callstack.pop();
+        *predicted_target_address = m_callstack.pop();
         return true;
     }
     else if (br->is_conditional)
     {
-        printf("%1d ", tpredict.shouldBranch(br->instruction_addr));
-        return tpredict.shouldBranch(br->instruction_addr);
-        //return false;
-        //return true;
+//      printf("%1d ", m_TournamentPredictor.shouldBranch(br->instruction_addr));
+        return m_TournamentPredictor.shouldBranch(br->instruction_addr);
     }
-    // instruction not branch
-    return false;
+    else 
+    {
+        // instruction not branch
+        *predicted_target_address = br->instruction_next_addr;
+        return false;
+    }
+
 }
+
 
 
 // Update the predictor after a prediction has been made.  This should accept
 // the branch record (br) and architectural state (os), as well as a third
 // argument (taken) indicating whether or not the branch was taken.
-//void PREDICTOR::update_predictor(
-//    const branch_record_c* br, 
-//   const op_state_c* os, 
-//    bool taken)
-void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os, bool taken, uint actual_target_address)
+void PREDICTOR::update_predictor(
+    const branch_record_c* br, 
+    const op_state_c* os, 
+    bool taken, 
+    uint actual_target_address)
 {
     /* replace this code with your own */
-    printf("%1d\n",taken);
+    //printf("%1d\n",taken);
     if (br->is_conditional)
-        tpredict.updatePredictor(taken);
+        m_TournamentPredictor.updatePredictor(taken);
 }
 
 
 // private classes
-
-
-
 
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'

@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "SaturationCounter.h"
 
+#ifndef _TOURNAMENT_PREDICTOR_H_
+#define _TOURNAMENT_PREDICTOR_H_
 
 class BranchHistory
 {
@@ -186,5 +188,7 @@ private:
     bool predicted_taken;           // final prediction
 };
 
+
 // vim: ts=4 et sw=4:
+#endif //_TOURNAMENT_PREDICTOR_H_
 

@@ -24,6 +24,9 @@ public:
        m_top = (m_top < newsize) ? m_top: m_top % newsize;
    }
 
+   /**
+    * Push a new element onto the stack
+    */
    void push(T newvalue)
    {
       size_t stacksize = m_datavector.size();
@@ -31,11 +34,22 @@ public:
       m_datavector[m_top] = newvalue;
    }
 
+   /**
+    * Returns the element currently on the top of the stack.
+    */
    T pop()
    {
       T topelement = m_datavector[m_top];
       m_top = (m_top == 0) ? m_datavector.size() : m_top - 1; 
       return topelement;
+   }
+
+   /** returns the memory budget of the stack in bits 
+   *   (might want to refactor to allow for arbitrary bit sizes)
+   */
+   size_t memoryusage()
+   {
+      return sizeof(T)*8*m_datavector.size();
    }
 
 private:
