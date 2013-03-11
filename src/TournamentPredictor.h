@@ -118,7 +118,6 @@ public:
         // Test whether we should branch
         
         // debug variable; TODO: check to see if address is byte-aligned
-        //instruction_addr = address;
         // Get predictions from local, global, and tournament
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
@@ -126,7 +125,6 @@ public:
         // Remember the address for updating
 
         return (choose_global ? global_prediction : local_prediction);
-        //return predicted_taken;
     }
     void updatePredictor(uint32_t address, bool outcome)
     {
