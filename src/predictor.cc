@@ -12,11 +12,14 @@
 
 // forward declarations
 static int getenvironmentint(const char* env_name, int defaultvalue);
+static uint hash (uint address);
+
 // Static local datastructures. 
 
 
-
 PREDICTOR::PREDICTOR()
+: m_RelativePredictorTable(hash),
+m_AbsolutePredictorTable(hash)
 {
     //get environment variables to setup cache - remember to keep track of mem usage
     m_callstack.resize(getenvironmentint("predictor_callstack_size", 4));
@@ -36,11 +39,6 @@ bool PREDICTOR::get_prediction(
            *predicted_target_address,br->is_indirect,br->is_conditional,
            br->is_call,br->is_return);
 */
-    if(br->is_indirect)
-    {
-        printf("VALID assuption!\n");
-    }
-
 
     if (br->is_call)
     {
@@ -57,6 +55,10 @@ bool PREDICTOR::get_prediction(
     else if (br->is_conditional)
     {
 //      printf("%1d ", m_TournamentPredictor.shouldBranch(br->instruction_addr));
+        *predicted_target_address = (br->is_indirect) ?
+            m_RelativePredictorTable[br->instruction_addr]:
+            m_AbsolutePredictorTable[br->instruction_addr];
+
         return m_TournamentPredictor.shouldBranch(br->instruction_addr);
     }
     else 
@@ -79,15 +81,28 @@ void PREDICTOR::update_predictor(
     bool taken, 
     uint actual_target_address)
 {
+
+    if(br->is_conditional)
+    {
+        if(br->is_indirect)
+            m_RelativePredictorTable[br->instruction_addr] = actual_target_address;
+        else
+            m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
+    }
+
+
+
+/*    if(br->is_indirect)
+    {
+        printf("%d\n", br->instruction_addr - actual_target_address);
+    }
+*/
+
     /* replace this code with your own */
     //printf("%1d\n",taken);
     if (br->is_conditional)
         m_TournamentPredictor.updatePredictor(taken);
 }
-
-
-// private classes
-
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
 static int getenvironmentint(const char* env_name, int defaultvalue = 0)
@@ -100,6 +115,11 @@ static int getenvironmentint(const char* env_name, int defaultvalue = 0)
     }
 
     return integer;
+}
+
+static uint hash (uint address)
+{
+    return address;
 }
 
 // vim: ts=4 et sw=4:

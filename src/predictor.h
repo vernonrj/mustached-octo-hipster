@@ -12,6 +12,7 @@
 #include "predictor_statistics.h"
 #include "circular_stack.h"
 #include "TournamentPredictor.h"
+#include "hashtable.h"
 #include "op_state.h"   // defines op_state_c (architectural state) class 
 #include "tread.h"      // defines branch_record_c class
 
@@ -25,13 +26,11 @@ public:
     bool get_prediction(const branch_record_c* br, const op_state_c* os, uint *predicted_target_address);
 
     void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken, uint actual_target_address);
-    //bool get_prediction(const branch_record_c* br, const op_state_c* os);
-    //void update_predictor(
-    //         const branch_record_c* br, 
-    //         const op_state_c* os, bool taken);
 private:
     PredictorStatistics m_statistics;
     TournamentPredictor m_TournamentPredictor;
+    HashTable<uint, uint> m_RelativePredictorTable;
+    HashTable<uint, uint> m_AbsolutePredictorTable;
     CircularStack<uint> m_callstack;
 };
 
