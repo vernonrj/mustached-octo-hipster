@@ -15,7 +15,7 @@ public:
 		// or use inheritance?
 		return history.entry;
 	}
-	void updateHistory(uint8_t new_entry)
+	void updateHistory(bool new_entry)
 	{
 		history.entry = history.entry << 1;
 		history.entry |= (new_entry & 0x1);
@@ -50,7 +50,7 @@ public:
         uint32_t scindex = history[mask_address].getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
-    void updatePredictor(uint32_t address, uint8_t outcome)
+    void updatePredictor(uint32_t address, bool outcome)
     {
         uint32_t mask_value = (1 << HISTORY_BITS) - 1;
         uint32_t mask_address = address & mask_value;
@@ -84,7 +84,7 @@ public:
         uint32_t scindex = ghistory.getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
-    void updatePredictor(BranchHistory ghistory, uint8_t outcome)
+    void updatePredictor(BranchHistory ghistory, bool outcome)
     {
         // Update Saturating Counter based on outcome
         uint32_t scindex = ghistory.getHistory();
@@ -110,42 +110,46 @@ public:
          lhistory(LocalHistory()),
          tourn_hist(GlobalHistory()),
          path_history(BranchHistory()),
-         instruction_addr(0x0)
+         instruction_addr(0x0),
+         local_prediction(false),
+         global_prediction(false),
+         choose_global(false),
+         predicted_taken(false)
     {}
     bool shouldBranch(uint32_t address)
     {
         // Test whether we should branch
         
         // debug variable; TODO: check to see if address is byte-aligned
-        uint32_t word_address = address;
-        // Get predictions from local, global, and tournament
-        bool lpredict = lhistory.shouldBranch(word_address);
-        bool gpredict = ghistory.shouldBranch(path_history);
-        bool choose_global = tourn_hist.shouldBranch(path_history);
-        // Remember the address for updating
         instruction_addr = address;
+        // Get predictions from local, global, and tournament
+        local_prediction = lhistory.shouldBranch(instruction_addr);
+        global_prediction = ghistory.shouldBranch(path_history);
+        choose_global = tourn_hist.shouldBranch(path_history);
+        // Remember the address for updating
 
-        return (choose_global ? gpredict : lpredict);
+        predicted_taken = (choose_global ? global_prediction : local_prediction);
+        return predicted_taken;
     }
-    void updatePredictor(uint8_t outcome)
+    void updatePredictor(bool outcome)
     {
         // check what we predicted
         // First get what our predictions were
         BranchHistory old_history(path_history);
-        uint32_t word_address = instruction_addr;
-        bool lpredict = lhistory.shouldBranch(word_address);
-        bool gpredict = ghistory.shouldBranch(old_history);
-        bool choose_global = tourn_hist.shouldBranch(old_history);
-        bool predicted_taken = shouldBranch(instruction_addr);
+
+        // this is stored, but
+        // If we're logging more than conditional branches,
+        // this should be rechecked here
+        //bool predicted_taken = shouldBranch(instruction_addr);
 
         // Update local and global predictors 
         path_history.updateHistory(outcome);
-        lhistory.updatePredictor(word_address, outcome);
+        lhistory.updatePredictor(instruction_addr, outcome);
         ghistory.updatePredictor(old_history, outcome);
         instruction_addr = 0x0;
 
 
-        if (lpredict == gpredict)
+        if (local_prediction == global_prediction)
         {
             // Both predictors predicted the same outcome.
             // Don't need to update the tournament predictor
@@ -174,7 +178,12 @@ private:
     LocalHistory lhistory;          // Local History
     GlobalHistory tourn_hist;       // Tournament History
     BranchHistory path_history;     // Global Path History
+    // Branching Address, Prediction outcomes
     uint32_t instruction_addr;      // Instruction Address
+    bool local_prediction;          // local prediction outcome
+    bool global_prediction;         // global prediction outcome
+    bool choose_global;             // tournament predictor choice
+    bool predicted_taken;           // final prediction
 };
 
 // vim: ts=4 et sw=4:

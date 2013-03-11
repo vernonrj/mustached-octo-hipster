@@ -74,7 +74,8 @@ void PREDICTOR::update_predictor(const branch_record_c* br, const op_state_c* os
 {
     /* replace this code with your own */
     printf("%1d\n",taken);
-    tpredict.updatePredictor(taken);
+    if (br->is_conditional)
+        tpredict.updatePredictor(taken);
 }
 
 
