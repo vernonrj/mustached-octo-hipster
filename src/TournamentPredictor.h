@@ -105,7 +105,7 @@ private:
 
 class TournamentPredictor
 {
-// class to manage global and local history
+// Implements the alpha predictor
 public:
     TournamentPredictor()
         :ghistory(GlobalHistory()),
