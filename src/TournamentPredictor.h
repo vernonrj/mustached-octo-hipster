@@ -6,11 +6,17 @@
 
 class BranchHistory
 {
+// Class to record the Branch History
 public:
-	BranchHistory(uint8_t bits_used = 10)
+	BranchHistory(uint8_t hist_length = 10)
 	{
+        if (hist_length > sizeof(uint32_t)
+                || hist_length <= 0)
+        {
+            hist_length = 10;
+        }
         history = 0x0;
-        mask = (1 << bits_used) - 1;
+        mask = (1 << hist_length) - 1;
 	}
 	uint16_t getHistory()
 	{
@@ -44,9 +50,9 @@ public:
     {
         // Get prediction
         uint32_t mask_value = (1 << HISTORY_BITS) - 1;
-        //uint32_t mask_address = address & 0x3FF;
         uint32_t mask_address = address & mask_value;
         uint32_t scindex = history[mask_address].getHistory();
+
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint32_t address, bool outcome)
@@ -54,11 +60,15 @@ public:
         uint32_t mask_value = (1 << HISTORY_BITS) - 1;
         uint32_t mask_address = address & mask_value;
         uint32_t scindex = history[mask_address].getHistory();
+
         if (outcome)    // taken
             ++counter[scindex];
         else            // not taken
             --counter[scindex];
+
         history[mask_address].updateHistory(outcome);
+
+        return;
     }
 private:
     static const uint8_t HISTORY_BITS = 10;
@@ -114,7 +124,6 @@ public:
     {
         // Test whether we should branch
         
-        // debug variable; TODO: check to see if address is byte-aligned
         // Get predictions from local, global, and tournament
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
@@ -129,6 +138,7 @@ public:
         // First get what our predictions were
         BranchHistory old_history(path_history);
 
+        // First recheck our predictions
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(old_history);
         bool choose_global = tourn_hist.shouldBranch(old_history);
@@ -139,6 +149,9 @@ public:
         lhistory.updatePredictor(address, outcome);
         ghistory.updatePredictor(old_history, outcome);
 
+        // Update Tournament predictor only if
+        // global predictor predicted differently from
+        // local predictor
 
         if (local_prediction == global_prediction)
         {
@@ -169,7 +182,6 @@ private:
     LocalHistory lhistory;          // Local History
     GlobalHistory tourn_hist;       // Tournament History
     BranchHistory path_history;     // Global Path History
-    // Branching Address, Prediction outcomes
 };
 
 
