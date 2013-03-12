@@ -111,44 +111,36 @@ public:
         :ghistory(GlobalHistory()),
          lhistory(LocalHistory()),
          tourn_hist(GlobalHistory()),
-         path_history(BranchHistory()),
-         instruction_addr(0x0),
-         local_prediction(false),
-         global_prediction(false),
-         choose_global(false),
-         predicted_taken(false)
+         path_history(BranchHistory())
     {}
     bool shouldBranch(uint32_t address)
     {
         // Test whether we should branch
         
         // debug variable; TODO: check to see if address is byte-aligned
-        instruction_addr = address;
         // Get predictions from local, global, and tournament
-        local_prediction = lhistory.shouldBranch(instruction_addr);
-        global_prediction = ghistory.shouldBranch(path_history);
-        choose_global = tourn_hist.shouldBranch(path_history);
+        bool local_prediction = lhistory.shouldBranch(address);
+        bool global_prediction = ghistory.shouldBranch(path_history);
+        bool choose_global = tourn_hist.shouldBranch(path_history);
         // Remember the address for updating
 
-        predicted_taken = (choose_global ? global_prediction : local_prediction);
-        return predicted_taken;
+        return (choose_global ? global_prediction : local_prediction);
     }
-    void updatePredictor(bool outcome)
+    void updatePredictor(uint32_t address, bool outcome)
     {
         // check what we predicted
         // First get what our predictions were
         BranchHistory old_history(path_history);
 
-        // this is stored, but
-        // If we're logging more than conditional branches,
-        // this should be rechecked here
-        //bool predicted_taken = shouldBranch(instruction_addr);
+        bool local_prediction = lhistory.shouldBranch(address);
+        bool global_prediction = ghistory.shouldBranch(old_history);
+        bool choose_global = tourn_hist.shouldBranch(old_history);
+        bool predicted_taken = shouldBranch(address);
 
         // Update local and global predictors 
         path_history.updateHistory(outcome);
-        lhistory.updatePredictor(instruction_addr, outcome);
+        lhistory.updatePredictor(address, outcome);
         ghistory.updatePredictor(old_history, outcome);
-        instruction_addr = 0x0;
 
 
         if (local_prediction == global_prediction)
@@ -181,11 +173,6 @@ private:
     GlobalHistory tourn_hist;       // Tournament History
     BranchHistory path_history;     // Global Path History
     // Branching Address, Prediction outcomes
-    uint32_t instruction_addr;      // Instruction Address
-    bool local_prediction;          // local prediction outcome
-    bool global_prediction;         // global prediction outcome
-    bool choose_global;             // tournament predictor choice
-    bool predicted_taken;           // final prediction
 };
 
 
