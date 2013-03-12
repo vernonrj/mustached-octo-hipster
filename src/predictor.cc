@@ -22,7 +22,7 @@ PREDICTOR::PREDICTOR()
 m_AbsolutePredictorTable(hash)
 {
     //get environment variables to setup cache - remember to keep track of mem usage
-    m_callstack.resize(getenvironmentint("predictor_callstack_size", 4));
+    m_callstack.resize(getenvironmentint("predictor_callstack_size", 16));
 }
 
 PREDICTOR::~PREDICTOR()
@@ -43,8 +43,10 @@ bool PREDICTOR::get_prediction(
     if (br->is_call)
     {
         //push address onto stack
+        *predicted_target_address = m_AbsolutePredictorTable[br->instruction_addr];
         m_callstack.push(br->instruction_next_addr);
         return true;
+
     }
     else if (br->is_return)
     {
@@ -55,11 +57,13 @@ bool PREDICTOR::get_prediction(
     else if (br->is_conditional)
     {
 //      printf("%1d ", m_TournamentPredictor.shouldBranch(br->instruction_addr));
+        bool branchTaken = m_TournamentPredictor.shouldBranch(br->instruction_addr);
+
         *predicted_target_address = (br->is_indirect) ?
             m_RelativePredictorTable[br->instruction_addr]:
             m_AbsolutePredictorTable[br->instruction_addr];
 
-        return m_TournamentPredictor.shouldBranch(br->instruction_addr);
+        return branchTaken;
     }
     else 
     {
@@ -71,7 +75,6 @@ bool PREDICTOR::get_prediction(
 }
 
 
-
 // Update the predictor after a prediction has been made.  This should accept
 // the branch record (br) and architectural state (os), as well as a third
 // argument (taken) indicating whether or not the branch was taken.
@@ -81,27 +84,38 @@ void PREDICTOR::update_predictor(
     bool taken, 
     uint actual_target_address)
 {
-
+    // Test misses and report them
     if(br->is_conditional)
+    {
+        uint predicted_addr = (br->is_indirect) ?
+           m_RelativePredictorTable[br->instruction_addr]:
+           m_AbsolutePredictorTable[br->instruction_addr];
+
+        if (predicted_addr != actual_target_address)
+        {
+            static int count = 0;
+            printf("Conditional :%d\n", ++count);
+        }
+
+    }
+
+    //update tables and predictors
+    if(br->is_call)
+    {
+        m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
+    } else if(br->is_return)
+    {
+
+    } else if(br->is_conditional)
     {
         if(br->is_indirect)
             m_RelativePredictorTable[br->instruction_addr] = actual_target_address;
         else
             m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
-    }
 
-
-
-/*    if(br->is_indirect)
-    {
-        printf("%d\n", br->instruction_addr - actual_target_address);
-    }
-*/
-
-    /* replace this code with your own */
-    //printf("%1d\n",taken);
-    if (br->is_conditional)
         m_TournamentPredictor.updatePredictor(taken);
+    }
+
 }
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
@@ -117,6 +131,7 @@ static int getenvironmentint(const char* env_name, int defaultvalue = 0)
     return integer;
 }
 
+// Dummy Hash function for a baseline
 static uint hash (uint address)
 {
     return address;
