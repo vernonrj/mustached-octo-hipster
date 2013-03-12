@@ -7,27 +7,24 @@
 class BranchHistory
 {
 public:
-	BranchHistory()
+	BranchHistory(uint8_t bits_used = 10)
 	{
-		history.entry = 0x0;
+        history = 0x0;
+        mask = (1 << bits_used) - 1;
 	}
 	uint16_t getHistory()
 	{
-		// Should we return this,
-		// or use inheritance?
-		return history.entry;
+        return history;
 	}
 	void updateHistory(bool new_entry)
 	{
-		history.entry = history.entry << 1;
-		history.entry |= (new_entry & 0x1);
+        history = (history << 1) & mask;
+        history |= new_entry;
 		return;
 	}
 private:
-	struct history_t
-	{
-		unsigned entry:12;
-	} history;
+    uint32_t history;
+    uint32_t mask;
 };
 
 
@@ -40,7 +37,7 @@ public:
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
         {
             counter[i] = SaturationCounter(3, 4);
-            history[i] = BranchHistory();
+            history[i] = BranchHistory(10);
         }
     }
     bool shouldBranch(uint32_t address)
@@ -111,7 +108,7 @@ public:
         :ghistory(GlobalHistory()),
          lhistory(LocalHistory()),
          tourn_hist(GlobalHistory()),
-         path_history(BranchHistory())
+         path_history(BranchHistory(12))
     {}
     bool shouldBranch(uint32_t address)
     {
