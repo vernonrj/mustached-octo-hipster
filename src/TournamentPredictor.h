@@ -37,7 +37,7 @@ public:
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
         {
             counter[i] = SaturationCounter(3, 4);
-            history[i] = BranchHistory(10);
+            history[i] = BranchHistory(HISTORY_BITS);
         }
     }
     bool shouldBranch(uint32_t address)
