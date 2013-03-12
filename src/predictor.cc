@@ -74,7 +74,6 @@ bool PREDICTOR::get_prediction(
 
 }
 
-
 // Update the predictor after a prediction has been made.  This should accept
 // the branch record (br) and architectural state (os), as well as a third
 // argument (taken) indicating whether or not the branch was taken.
@@ -106,6 +105,9 @@ void PREDICTOR::update_predictor(
     } else if(br->is_return)
     {
 
+    } else if(br->is_return)
+    {
+
     } else if(br->is_conditional)
     {
         if(br->is_indirect)
@@ -113,16 +115,9 @@ void PREDICTOR::update_predictor(
         else
             m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
 
-        m_TournamentPredictor.updatePredictor(taken);
+        m_TournamentPredictor.updatePredictor(br->instruction_addr, taken);
     }
 
-<<<<<<< HEAD
-=======
-    /* replace this code with your own */
-    //printf("%1d\n",taken);
-    if (br->is_conditional)
-        m_TournamentPredictor.updatePredictor(br->instruction_addr, taken);
->>>>>>> 21e6c67f2b177d62517faf2342a04b91fa06374f
 }
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
