@@ -10,8 +10,7 @@ class BranchHistory
 public:
 	BranchHistory(uint8_t hist_length = 10)
 	{
-        if (hist_length > sizeof(uint32_t)
-                || hist_length <= 0)
+        if (hist_length > 20 || hist_length <= 0)
         {
             hist_length = 10;
         }
@@ -25,7 +24,7 @@ public:
 	void updateHistory(bool new_entry)
 	{
         history = (history << 1) & mask;
-        history |= new_entry;
+        history |= (new_entry & 0x1);
 		return;
 	}
 private:
