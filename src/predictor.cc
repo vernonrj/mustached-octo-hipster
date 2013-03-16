@@ -14,7 +14,22 @@
 static int getenvironmentint(const char* env_name, int defaultvalue);
 static uint hash (uint address);
 
-// Static local datastructures. 
+// Static local variables. 
+static uint s_PreviousTargetPrediction = 0;
+static bool s_PreviousBranchPrediction = false;
+
+static uint s_ConditionalMissesB        = 0;
+static uint s_CallMissesB               = 0;
+static uint s_IndirectMissesB           = 0;
+static uint s_ReturnMissesB             = 0;
+static uint s_GenericMissB              = 0;
+
+
+static uint s_ConditionalMisses        = 0;
+static uint s_CallMisses               = 0;
+static uint s_IndirectMisses           = 0; 
+static uint s_ReturnMisses             = 0;
+static uint s_GenericMiss              = 0;
 
 
 PREDICTOR::PREDICTOR()
@@ -27,7 +42,19 @@ m_AbsolutePredictorTable(hash)
 
 PREDICTOR::~PREDICTOR()
 {
+    printf("Target Stats:\n");
+    printf("     CallMisses  : %d\n", s_CallMisses);
+    printf("     ReturnMisses: %d\n", s_ReturnMisses );
+    printf("     ConBranchMis: %d\n", s_ConditionalMisses);
+    printf("     IndirectMiss: %d\n", s_IndirectMisses);
+    printf("     GenericMisse: %d\n", s_GenericMiss);
 
+    printf("Prediction Stats:\n");
+    printf("     CallMisses  : %d\n", s_CallMisses);
+    printf("     ReturnMisses: %d\n", s_ReturnMisses );
+    printf("     ConBranchMis: %d\n", s_ConditionalMisses);
+    printf("     IndirectMiss: %d\n", s_IndirectMisses);
+    printf("     GenericMisse: %d\n", s_GenericMiss);
 }
 
 bool PREDICTOR::get_prediction(
@@ -35,43 +62,42 @@ bool PREDICTOR::get_prediction(
     const op_state_c* os, 
     uint *predicted_target_address)
 {
-/*    printf("%0x %0x %1d %1d %1d %1d ",br->instruction_addr,
-           *predicted_target_address,br->is_indirect,br->is_conditional,
-           br->is_call,br->is_return);
-*/
+
+    bool branchTaken = false;
 
     if (br->is_call)
     {
         //push address onto stack
         *predicted_target_address = m_AbsolutePredictorTable[br->instruction_addr];
         m_callstack.push(br->instruction_next_addr);
-        return true;
-
+        branchTaken = true;
     }
     else if (br->is_return)
     {
         //pop address from stack
         *predicted_target_address = m_callstack.pop();
-        return true;
+        branchTaken = true;
     }
     else if (br->is_conditional)
     {
-//      printf("%1d ", m_TournamentPredictor.shouldBranch(br->instruction_addr));
-        bool branchTaken = m_TournamentPredictor.shouldBranch(br->instruction_addr);
+        branchTaken = m_TournamentPredictor.shouldBranch(br->instruction_addr);
 
         *predicted_target_address = (br->is_indirect) ?
             m_RelativePredictorTable[br->instruction_addr]:
             m_AbsolutePredictorTable[br->instruction_addr];
-
-        return branchTaken;
     }
     else 
     {
-        // instruction not branch
+        // Unconditional Branch
+
         *predicted_target_address = br->instruction_next_addr;
-        return false;
+        branchTaken = true;
     }
 
+    s_PreviousTargetPrediction = *predicted_target_address; //Statistic gathering
+    s_PreviousBranchPrediction = branchTaken;               //Statistic gathering
+ 
+    return branchTaken;
 }
 
 // Update the predictor after a prediction has been made.  This should accept
@@ -83,19 +109,26 @@ void PREDICTOR::update_predictor(
     bool taken, 
     uint actual_target_address)
 {
-    // Test misses and report them
-    if(br->is_conditional)
+
+    //Miss Detection
+    //Test for prediction miss
+    if(s_PreviousBranchPrediction != taken)
     {
-        uint predicted_addr = (br->is_indirect) ?
-           m_RelativePredictorTable[br->instruction_addr]:
-           m_AbsolutePredictorTable[br->instruction_addr];
+        s_CallMissesB   = br->is_call   ? s_CallMissesB + 1: s_CallMissesB;
+        s_ReturnMissesB = br->is_return ? s_ReturnMissesB + 1: s_ReturnMissesB;
+        s_ConditionalMissesB = br->is_conditional ? s_ConditionalMissesB + 1: s_ConditionalMissesB;
+        s_IndirectMissesB = br->is_indirect ? s_IndirectMissesB + 1: s_IndirectMisses;
+        ++s_GenericMissB;
+    } 
 
-        if (predicted_addr != actual_target_address)
-        {
-            static int count = 0;
-            printf("Conditional :%d\n", ++count);
-        }
-
+    //Test for miss target for statistics
+    if(s_PreviousTargetPrediction != actual_target_address)
+    {
+        s_CallMisses   = br->is_call   ? s_CallMisses + 1: s_CallMisses;
+        s_ReturnMisses = br->is_return ? s_ReturnMisses + 1: s_ReturnMisses;
+        s_ConditionalMisses = br->is_conditional ? s_ConditionalMisses + 1: s_ConditionalMisses;
+        s_IndirectMisses = br->is_indirect ? s_IndirectMisses + 1: s_IndirectMisses;
+        ++s_GenericMiss;
     }
 
     //update tables and predictors
@@ -108,7 +141,7 @@ void PREDICTOR::update_predictor(
     } else if(br->is_return)
     {
 
-    } else if(br->is_conditional)
+    } else (br->is_conditional)
     {
         if(br->is_indirect)
             m_RelativePredictorTable[br->instruction_addr] = actual_target_address;
