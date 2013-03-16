@@ -10,8 +10,7 @@ class BranchHistory
 public:
 	BranchHistory(uint8_t hist_length = 10)
 	{
-        if (hist_length > sizeof(uint32_t)
-                || hist_length <= 0)
+        if (hist_length > 20 || hist_length <= 0)
         {
             hist_length = 10;
         }
@@ -25,7 +24,7 @@ public:
 	void updateHistory(bool new_entry)
 	{
         history = (history << 1) & mask;
-        history |= new_entry;
+        history |= (new_entry & 0x1);
 		return;
 	}
 private:
@@ -49,16 +48,14 @@ public:
     bool shouldBranch(uint32_t address)
     {
         // Get prediction
-        uint32_t mask_value = (1 << HISTORY_BITS) - 1;
-        uint32_t mask_address = address & mask_value;
+        uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint32_t address, bool outcome)
     {
-        uint32_t mask_value = (1 << HISTORY_BITS) - 1;
-        uint32_t mask_address = address & mask_value;
+        uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
         if (outcome)    // taken
@@ -73,6 +70,7 @@ public:
 private:
     static const uint8_t HISTORY_BITS = 10;
     static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
+    static const uint32_t MASK_VALUE = HISTORY_SIZE - 1;
     BranchHistory history[HISTORY_SIZE];
     SaturationCounter counter[HISTORY_SIZE];
 };
@@ -128,53 +126,42 @@ public:
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
         bool choose_global = tourn_hist.shouldBranch(path_history);
-        // Remember the address for updating
 
         return (choose_global ? global_prediction : local_prediction);
     }
     void updatePredictor(uint32_t address, bool outcome)
     {
-        // check what we predicted
-        // First get what our predictions were
-        BranchHistory old_history(path_history);
-
         // First recheck our predictions
         bool local_prediction = lhistory.shouldBranch(address);
-        bool global_prediction = ghistory.shouldBranch(old_history);
-        bool choose_global = tourn_hist.shouldBranch(old_history);
+        bool global_prediction = ghistory.shouldBranch(path_history);
+        bool choose_global = tourn_hist.shouldBranch(path_history);
         bool predicted_taken = shouldBranch(address);
 
         // Update local and global predictors 
-        path_history.updateHistory(outcome);
         lhistory.updatePredictor(address, outcome);
-        ghistory.updatePredictor(old_history, outcome);
+        ghistory.updatePredictor(path_history, outcome);
 
-        // Update Tournament predictor only if
-        // global predictor predicted differently from
-        // local predictor
-
-        if (local_prediction == global_prediction)
+        if (local_prediction != global_prediction)
         {
-            // Both predictors predicted the same outcome.
-            // Don't need to update the tournament predictor
-            return;
+            // Predictors predicted differently.
+            // update tournament predictor
+            // based on whether outcome was correctly predicted
+            if (outcome == predicted_taken)
+            {
+                // outcome was predicted correctly
+                // unused predictor mispredicted
+                tourn_hist.updatePredictor(path_history, choose_global);
+            }
+            else
+            {
+                // outcome was not predicted correctly
+                // unused predictor correctly predicted
+                tourn_hist.updatePredictor(path_history, !choose_global);
+            }
         }
 
-        // Predictors predicted differently.
-        // update tournament predictor
-        // based on whether outcome was correctly predicted
-        if (outcome == predicted_taken)
-        {
-            // outcome was predicted correctly
-            // unused predictor mispredicted
-            tourn_hist.updatePredictor(old_history, choose_global);
-        }
-        else
-        {
-            // outcome was not predicted correctly
-            // unused predictor correctly predicted
-            tourn_hist.updatePredictor(old_history, !choose_global);
-        }
+        // Finally, update the path history
+        path_history.updateHistory(outcome);
         return;
     }
 private:
