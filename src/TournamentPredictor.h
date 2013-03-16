@@ -1,25 +1,31 @@
-#include <stdint.h>
-#include "SaturationCounter.h"
 
 #ifndef _TOURNAMENT_PREDICTOR_H_
 #define _TOURNAMENT_PREDICTOR_H_
 
+#include <stdint.h>
+#include "SaturationCounter.h"
+
+// The Alpha Predictor
+// Uses a Tournament Predictor to choose between
+// a Global Predictor
+// and a Local Predictor
+
 class BranchHistory
 {
-// Class to record the Branch History
+// Records the Branch History
 public:
 	BranchHistory(uint8_t hist_length = 10)
 	{
         if (hist_length > 20 || hist_length <= 0)
-        {
-            hist_length = 10;
-        }
+            hist_length = 10;   // Sanity Check
         history = 0x0;
+        // Generate a mask to hold history at
+        // a specified length
         mask = (1 << hist_length) - 1;
 	}
 	uint16_t getHistory()
 	{
-        return history;
+        return (history & mask);
 	}
 	void updateHistory(bool new_entry)
 	{
@@ -35,7 +41,7 @@ private:
 
 class LocalHistory
 {
-// Class to manage local history 
+// Class to manage a Local History Table
 public:
     LocalHistory()
     {
@@ -47,7 +53,7 @@ public:
     }
     bool shouldBranch(uint32_t address)
     {
-        // Get prediction
+        // Predict the branch outcome at PC address
         uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
@@ -58,19 +64,24 @@ public:
         uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
+        // Update the local Saturating Counter
         if (outcome)    // taken
             ++counter[scindex];
         else            // not taken
             --counter[scindex];
 
+        // Update the local Path History
         history[mask_address].updateHistory(outcome);
 
         return;
     }
 private:
+    // Size constants
     static const uint8_t HISTORY_BITS = 10;
     static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
+    // Bounds Enforcement
     static const uint32_t MASK_VALUE = HISTORY_SIZE - 1;
+    // Tables
     BranchHistory history[HISTORY_SIZE];
     SaturationCounter counter[HISTORY_SIZE];
 };
@@ -87,7 +98,7 @@ public:
     }
     bool shouldBranch(BranchHistory ghistory)
     {
-        // Get prediction
+        // Predict the branch outcome based on the global path history
         uint32_t scindex = ghistory.getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
@@ -102,8 +113,10 @@ public:
         return;
     }
 private:
+    // Size constants
     static const uint32_t HISTORY_BITS = 12;
     static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
+    // Table
     SaturationCounter counter[HISTORY_SIZE];
 };
 
@@ -131,6 +144,8 @@ public:
     }
     void updatePredictor(uint32_t address, bool outcome)
     {
+        // Update All Predictors based on branch outcome at PC address
+        
         // First recheck our predictions
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
@@ -162,6 +177,7 @@ public:
 
         // Finally, update the path history
         path_history.updateHistory(outcome);
+
         return;
     }
 private:
