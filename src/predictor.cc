@@ -50,7 +50,7 @@ PREDICTOR::~PREDICTOR()
     printf("     ConBranchMis: %d\n", s_ConditionalMisses);
     printf("     IndirectMiss: %d\n", s_IndirectMisses);
     printf("     Unconditiona: %d\n", s_UnconditionalMisses);
-    printf("     GenericMisse: %d\n", s_GenericMiss);
+    printf("     TotalMisses : %d\n", s_GenericMiss);
 
     printf("Prediction Stats:\n");
     printf("     CallMisses  : %d\n", s_CallMissesB);
@@ -58,7 +58,7 @@ PREDICTOR::~PREDICTOR()
     printf("     ConBranchMis: %d\n", s_ConditionalMissesB);
     printf("     IndirectMiss: %d\n", s_IndirectMissesB);
     printf("     Unconditiona: %d\n", s_UnconditionalMissesB);
-    printf("     GenericMisse: %d\n", s_GenericMissB);
+    printf("     TotalMisses : %d\n", s_GenericMissB);
 }
 
 bool PREDICTOR::get_prediction(
