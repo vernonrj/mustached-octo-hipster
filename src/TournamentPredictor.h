@@ -126,7 +126,6 @@ public:
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
         bool choose_global = tourn_hist.shouldBranch(path_history);
-        // Remember the address for updating
 
         return (choose_global ? global_prediction : local_prediction);
     }
