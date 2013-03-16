@@ -132,47 +132,37 @@ public:
     }
     void updatePredictor(uint32_t address, bool outcome)
     {
-        // check what we predicted
-        // First get what our predictions were
-        BranchHistory old_history(path_history);
-
         // First recheck our predictions
         bool local_prediction = lhistory.shouldBranch(address);
-        bool global_prediction = ghistory.shouldBranch(old_history);
-        bool choose_global = tourn_hist.shouldBranch(old_history);
+        bool global_prediction = ghistory.shouldBranch(path_history);
+        bool choose_global = tourn_hist.shouldBranch(path_history);
         bool predicted_taken = shouldBranch(address);
 
         // Update local and global predictors 
-        path_history.updateHistory(outcome);
         lhistory.updatePredictor(address, outcome);
-        ghistory.updatePredictor(old_history, outcome);
+        ghistory.updatePredictor(path_history, outcome);
 
-        // Update Tournament predictor only if
-        // global predictor predicted differently from
-        // local predictor
-
-        if (local_prediction == global_prediction)
+        if (local_prediction != global_prediction)
         {
-            // Both predictors predicted the same outcome.
-            // Don't need to update the tournament predictor
-            return;
+            // Predictors predicted differently.
+            // update tournament predictor
+            // based on whether outcome was correctly predicted
+            if (outcome == predicted_taken)
+            {
+                // outcome was predicted correctly
+                // unused predictor mispredicted
+                tourn_hist.updatePredictor(path_history, choose_global);
+            }
+            else
+            {
+                // outcome was not predicted correctly
+                // unused predictor correctly predicted
+                tourn_hist.updatePredictor(path_history, !choose_global);
+            }
         }
 
-        // Predictors predicted differently.
-        // update tournament predictor
-        // based on whether outcome was correctly predicted
-        if (outcome == predicted_taken)
-        {
-            // outcome was predicted correctly
-            // unused predictor mispredicted
-            tourn_hist.updatePredictor(old_history, choose_global);
-        }
-        else
-        {
-            // outcome was not predicted correctly
-            // unused predictor correctly predicted
-            tourn_hist.updatePredictor(old_history, !choose_global);
-        }
+        // Finally, update the path history
+        path_history.updateHistory(outcome);
         return;
     }
 private:
