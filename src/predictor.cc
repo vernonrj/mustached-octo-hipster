@@ -22,6 +22,7 @@ static uint s_ConditionalMissesB        = 0;
 static uint s_CallMissesB               = 0;
 static uint s_IndirectMissesB           = 0;
 static uint s_ReturnMissesB             = 0;
+static uint s_UnconditionalMissesB      = 0;
 static uint s_GenericMissB              = 0;
 
 
@@ -29,6 +30,7 @@ static uint s_ConditionalMisses        = 0;
 static uint s_CallMisses               = 0;
 static uint s_IndirectMisses           = 0; 
 static uint s_ReturnMisses             = 0;
+static uint s_UnconditionalMisses      = 0;
 static uint s_GenericMiss              = 0;
 
 
@@ -44,17 +46,19 @@ PREDICTOR::~PREDICTOR()
 {
     printf("Target Stats:\n");
     printf("     CallMisses  : %d\n", s_CallMisses);
-    printf("     ReturnMisses: %d\n", s_ReturnMisses );
+    printf("     ReturnMisses: %d\n", s_ReturnMisses);
     printf("     ConBranchMis: %d\n", s_ConditionalMisses);
     printf("     IndirectMiss: %d\n", s_IndirectMisses);
+    printf("     Unconditiona: %d\n", s_UnconditionalMisses);
     printf("     GenericMisse: %d\n", s_GenericMiss);
 
     printf("Prediction Stats:\n");
-    printf("     CallMisses  : %d\n", s_CallMisses);
-    printf("     ReturnMisses: %d\n", s_ReturnMisses );
-    printf("     ConBranchMis: %d\n", s_ConditionalMisses);
-    printf("     IndirectMiss: %d\n", s_IndirectMisses);
-    printf("     GenericMisse: %d\n", s_GenericMiss);
+    printf("     CallMisses  : %d\n", s_CallMissesB);
+    printf("     ReturnMisses: %d\n", s_ReturnMissesB);
+    printf("     ConBranchMis: %d\n", s_ConditionalMissesB);
+    printf("     IndirectMiss: %d\n", s_IndirectMissesB);
+    printf("     Unconditiona: %d\n", s_UnconditionalMissesB);
+    printf("     GenericMisse: %d\n", s_GenericMissB);
 }
 
 bool PREDICTOR::get_prediction(
@@ -82,15 +86,15 @@ bool PREDICTOR::get_prediction(
     {
         branchTaken = m_TournamentPredictor.shouldBranch(br->instruction_addr);
 
-        *predicted_target_address = (br->is_indirect) ?
-            m_RelativePredictorTable[br->instruction_addr]:
+        *predicted_target_address =
             m_AbsolutePredictorTable[br->instruction_addr];
     }
     else 
     {
         // Unconditional Branch
-
-        *predicted_target_address = br->instruction_next_addr;
+        *predicted_target_address =
+            m_AbsolutePredictorTable[br->instruction_addr];
+ 
         branchTaken = true;
     }
 
@@ -116,8 +120,15 @@ void PREDICTOR::update_predictor(
     {
         s_CallMissesB   = br->is_call   ? s_CallMissesB + 1: s_CallMissesB;
         s_ReturnMissesB = br->is_return ? s_ReturnMissesB + 1: s_ReturnMissesB;
-        s_ConditionalMissesB = br->is_conditional ? s_ConditionalMissesB + 1: s_ConditionalMissesB;
-        s_IndirectMissesB = br->is_indirect ? s_IndirectMissesB + 1: s_IndirectMisses;
+        s_ConditionalMissesB = br->is_conditional ? 
+            s_ConditionalMissesB + 1: 
+            s_ConditionalMissesB;
+        s_IndirectMissesB = br->is_indirect ? s_IndirectMissesB + 1: s_IndirectMissesB;
+        s_UnconditionalMissesB =  
+             !(br->is_call||br->is_return||br->is_conditional||br->is_indirect)? 
+                  s_UnconditionalMissesB + 1:
+                  s_UnconditionalMissesB;
+
         ++s_GenericMissB;
     } 
 
@@ -126,10 +137,17 @@ void PREDICTOR::update_predictor(
     {
         s_CallMisses   = br->is_call   ? s_CallMisses + 1: s_CallMisses;
         s_ReturnMisses = br->is_return ? s_ReturnMisses + 1: s_ReturnMisses;
-        s_ConditionalMisses = br->is_conditional ? s_ConditionalMisses + 1: s_ConditionalMisses;
+        s_ConditionalMisses = br->is_conditional ? 
+             s_ConditionalMisses + 1: 
+             s_ConditionalMisses;
         s_IndirectMisses = br->is_indirect ? s_IndirectMisses + 1: s_IndirectMisses;
+        s_UnconditionalMisses =  
+             !(br->is_call||br->is_return||br->is_conditional||br->is_indirect)? 
+                  s_UnconditionalMisses + 1:
+                  s_UnconditionalMisses;
         ++s_GenericMiss;
     }
+
 
     //update tables and predictors
     if(br->is_call)
@@ -138,17 +156,14 @@ void PREDICTOR::update_predictor(
     } else if(br->is_return)
     {
 
-    } else if(br->is_return)
+    } else if (br->is_conditional)
     {
-
-    } else (br->is_conditional)
-    {
-        if(br->is_indirect)
-            m_RelativePredictorTable[br->instruction_addr] = actual_target_address;
-        else
-            m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
-
+        m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
         m_TournamentPredictor.updatePredictor(br->instruction_addr, taken);
+    } else
+    {
+
+        m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
     }
 
 }
