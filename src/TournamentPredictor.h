@@ -48,16 +48,14 @@ public:
     bool shouldBranch(uint32_t address)
     {
         // Get prediction
-        uint32_t mask_value = (1 << HISTORY_BITS) - 1;
-        uint32_t mask_address = address & mask_value;
+        uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
     void updatePredictor(uint32_t address, bool outcome)
     {
-        uint32_t mask_value = (1 << HISTORY_BITS) - 1;
-        uint32_t mask_address = address & mask_value;
+        uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
         if (outcome)    // taken
@@ -72,6 +70,7 @@ public:
 private:
     static const uint8_t HISTORY_BITS = 10;
     static const uint32_t HISTORY_SIZE = 1 << HISTORY_BITS;
+    static const uint32_t MASK_VALUE = HISTORY_SIZE - 1;
     BranchHistory history[HISTORY_SIZE];
     SaturationCounter counter[HISTORY_SIZE];
 };
