@@ -83,7 +83,7 @@ public:
     GlobalHistory()
     {
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
-            counter[i] = SaturationCounter(2, 2);
+            counter[i] = SaturationCounter(2, 1);
     }
     bool shouldBranch(BranchHistory ghistory)
     {
