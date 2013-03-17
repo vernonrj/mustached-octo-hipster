@@ -185,7 +185,7 @@ static int getenvironmentint(const char* env_name, int defaultvalue = 0)
 // Dummy Hash function for a baseline
 static uint hash (uint address)
 {
-    address = fnv_32_buf(&address, 4, FNV1_32A_INIT);
+    address = fnv_32_buf(&address, 4, FNV1_32_INIT);
     return address;
 }
 
