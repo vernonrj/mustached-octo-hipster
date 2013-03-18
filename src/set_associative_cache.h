@@ -1,6 +1,7 @@
 #ifndef _SET_CACHE_
 #define _SET_CACHE_
 #include<vector>
+#include<tr1/functional>
 #include<algorithm>
 
 // This class implements a fully associative cache.
@@ -10,10 +11,21 @@ class SetAssociativeCache
     //private forward declarations
     struct line_t;
     struct set_t;
+    static void null_evict(uint,uint){}
 public:
-    SetAssociativeCache(uint sets, uint associativity=1)
+    SetAssociativeCache()
+    :m_evictfn(null_evict)
+    {}
+    
+
+    ~SetAssociativeCache()
+    {
+    }
+
+    void setDimentions(uint sets, uint associativity=1)
     {
         using namespace std;
+        m_storage.clear(); //clear out cache before resize
         m_storage.resize(sets);
         for(std::vector<set_t>::iterator i = m_storage.begin(); 
             i != m_storage.end(); ++i)
@@ -23,14 +35,14 @@ public:
         }
     }
 
-    ~SetAssociativeCache()
+    void setEvictCallBack(std::tr1::function<void (uint, uint)> fn)
     {
-
+        m_evictfn = fn;
     }
 
     // e.g. on use
     // cache.additem(0x123456, data, evicted_addr, evicted_data);
-    void additem(uint addr, uint data, uint& evaddress, uint& evdata)
+    void additem(uint addr, uint data)
     {
        using namespace std;
        uint tag = addrtotag(addr);
@@ -38,11 +50,12 @@ public:
        vector<line_t>& set = m_storage[addrtoindex(addr)].m_storage; 
        uint& counter = m_storage[addrtoindex(addr)].m_counter;
 
-       evaddress = evdata = 0x0;
+       uint evaddress = 0;
+       uint evdata = 0;
 
        vector<line_t>::iterator it; 
        it = find(set.begin(), set.end(), tag);
-       if(it != set.end()) // if tag is present just return a reference
+       if(it != set.end())
        {
            it->used = true;
            it->value = data;
@@ -63,6 +76,8 @@ public:
                    //element.tag = tag;
                    evaddress = (addr & (tag << log2(m_storage.size())));
                    evdata = element.value;
+                   if(evaddress != 0)
+                       m_evictfn(evaddress, evdata);
 
                    element.value = data;
                    return;
@@ -115,6 +130,7 @@ private: //helper functions
         return i;
     }
 
+
 private:
     struct set_t //set size = sizeof(line_t) + log2(ways)
     {
@@ -142,6 +158,7 @@ private:
     };
 
     std::vector<set_t> m_storage;
+    std::tr1::function<void (uint,uint)> m_evictfn;
 };
 
 #endif
