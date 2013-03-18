@@ -29,7 +29,10 @@ public:
         // save data
         if (m_filestream.is_open())
         {
-            for_each(m_data.begin(), m_data.end(), bind(&HashTable::save_pair, this, _1));
+            for_each(
+                m_data.begin(), 
+                m_data.end(), 
+                bind(&HashTable::save_pair, this, _1));
             m_filestream.close();
         }
         m_hashfn = 0;
