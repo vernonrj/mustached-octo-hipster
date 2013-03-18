@@ -50,7 +50,7 @@ public:
            while(true)
            {
                //increment counter and get element reference
-               counter = counter + 1 % set.size();
+               counter = (counter + 1) % set.size();
                line_t& element = set[counter];
 
                //flip used bits
