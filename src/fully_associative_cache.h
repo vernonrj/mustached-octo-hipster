@@ -34,7 +34,7 @@ public:
            while(true)
            {
                //increment counter and get element reference
-               m_counter = m_counter + 1 % m_storage.size();
+               m_counter = (m_counter + 1) % m_storage.size();
                line_t& element = m_storage[m_counter];
 
                //flip used bits
