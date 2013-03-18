@@ -59,7 +59,7 @@ public:
        {
            it->used = true;
            it->value = data;
-           //return it->value;
+	   return;
        }
        else //find an element to evict
        {
@@ -73,15 +73,14 @@ public:
                element.used = ~element.used;
                if(element.used == true) // value to be evicted
                {
-                   //element.tag = tag;
                    evaddress = (addr & (tag << log2(m_storage.size())));
                    evdata = element.value;
                    if(evaddress != 0)
                        m_evictfn(evaddress, evdata);
 
+                   element.tag = tag;
                    element.value = data;
                    return;
-                   //return element.value;
                }
            }
        }
@@ -105,6 +104,14 @@ public:
         return 0;
     }
 private: //helper functions
+    //return the Ceil(log2(x))
+    static uint log2(uint x)
+    {
+        uint i;
+        for(i = 0; x >= ((unsigned)1<<i); ++i){}
+        return i-1;
+    }
+
     uint addrtotag(uint addr)
     {
        //calc index bit size
@@ -122,13 +129,6 @@ private: //helper functions
         return addr & mask;
     }
 
-    //return the Ceil(log2(x))
-    uint log2(uint x)
-    {
-        uint i;
-        for(i = 0; x < ((unsigned)1<<i); ++i){}
-        return i;
-    }
 
 
 private:
