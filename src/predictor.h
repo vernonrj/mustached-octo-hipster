@@ -15,8 +15,6 @@
 #include "op_state.h"   // defines op_state_c (architectural state) class 
 #include "tread.h"      // defines branch_record_c class
 
-typedef CircularStack<uint32_t> Callstack;
-
 class PREDICTOR
 {
 public:
@@ -26,12 +24,7 @@ public:
 
     void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken, uint actual_target_address);
 private:
-    TournamentPredictor m_TournamentPredictor;
-    HashTable<uint, uint> m_RelativePredictorTable;
-    HashTable<uint, uint> m_AbsolutePredictorTable;
-    CircularStack<uint> m_callstack;
-
-
+   std::fstream m_outputfile;
 };
 
 #endif // PREDICTOR_H_SEEN
