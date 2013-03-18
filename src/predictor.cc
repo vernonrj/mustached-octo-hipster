@@ -8,6 +8,7 @@
 #include "TournamentPredictor.h"
 #include "predictor.h"
 #include "fully_associative_cache.h"
+#include "set_associative_cache.h"
 #include "fnv.h"
 
 // tuning parameters
