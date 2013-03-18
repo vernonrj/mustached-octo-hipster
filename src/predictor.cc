@@ -7,6 +7,7 @@
 #include "SaturationCounter.h"
 #include "TournamentPredictor.h"
 #include "predictor.h"
+#include "fully_associative_cache.h"
 #include "fnv.h"
 
 // tuning parameters
@@ -185,8 +186,7 @@ static int getenvironmentint(const char* env_name, int defaultvalue = 0)
 // Dummy Hash function for a baseline
 static uint hash (uint address)
 {
-    address = fnv_32_buf(&address, 4, FNV1_32_INIT);
-    return address;
+    return fnv_32_buf(&address, 4, FNV1_32_INIT);
 }
 
 // vim: ts=4 et sw=4:
