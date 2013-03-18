@@ -29,8 +29,8 @@ public:
     }
 
     // e.g. on use
-    // cache.additem(0x12345679) = data;
-    uint& additem(uint addr)
+    // cache.additem(0x123456, data, evicted_addr, evicted_data);
+    void additem(uint addr, uint data, uint& evaddress, uint& evdata)
     {
        using namespace std;
        uint tag = addrtotag(addr);
@@ -38,12 +38,15 @@ public:
        vector<line_t>& set = m_storage[addrtoindex(addr)].m_storage; 
        uint& counter = m_storage[addrtoindex(addr)].m_counter;
 
+       evaddress = evdata = 0x0;
+
        vector<line_t>::iterator it; 
        it = find(set.begin(), set.end(), tag);
        if(it != set.end()) // if tag is present just return a reference
        {
            it->used = true;
-           return it->value;
+           it->value = data;
+           //return it->value;
        }
        else //find an element to evict
        {
@@ -57,8 +60,13 @@ public:
                element.used = ~element.used;
                if(element.used == true) // value to be evicted
                {
-                   element.tag = tag;
-                   return element.value;
+                   //element.tag = tag;
+                   evaddress = (addr & (tag << log2(m_storage.size())));
+                   evdata = element.value;
+
+                   element.value = data;
+                   return;
+                   //return element.value;
                }
            }
        }
