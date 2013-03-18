@@ -16,7 +16,6 @@ public:
     SetAssociativeCache()
     :m_evictfn(null_evict)
     {}
-    
 
     ~SetAssociativeCache()
     {
@@ -35,6 +34,12 @@ public:
         }
     }
 
+    // A good use for this is to use bind to have the evict call into
+    // a second level caches add. e.g.
+    // cacheobject1.setEvictCallBack(
+    //     std::tr1::bind(&Class::memfun, 
+    //     &cacheobject2, _1, _2));
+    // where memfun is a function that takes (uint, uint)
     void setEvictCallBack(std::tr1::function<void (uint, uint)> fn)
     {
         m_evictfn = fn;
@@ -59,7 +64,7 @@ public:
        {
            it->used = true;
            it->value = data;
-           //return it->value;
+           return;
        }
        else //find an element to evict
        {
@@ -73,7 +78,7 @@ public:
                element.used = ~element.used;
                if(element.used == true) // value to be evicted
                {
-                   //element.tag = tag;
+                   element.tag = tag;
                    evaddress = (addr & (tag << log2(m_storage.size())));
                    evdata = element.value;
                    if(evaddress != 0)
@@ -81,7 +86,6 @@ public:
 
                    element.value = data;
                    return;
-                   //return element.value;
                }
            }
        }
@@ -105,14 +109,22 @@ public:
         return 0;
     }
 private: //helper functions
-    uint addrtotag(uint addr)
+    //return the Ceil(log2(x))
+    static uint log2(uint x)
+    {
+        uint i;
+        for(i = 0; x >= ((unsigned)1<<i); ++i){}
+        return i;
+    }
+
+    virtual uint addrtotag(uint addr)
     {
        //calc index bit size
         uint indexbits = log2(m_storage.size());
        return addr >> indexbits;
     }
 
-    uint addrtoindex(uint addr)
+    virtual uint addrtoindex(uint addr)
     {
         //calc index bit size and make mask
         uint indexbits = log2(m_storage.size());
@@ -121,15 +133,6 @@ private: //helper functions
         //mask out all other bits
         return addr & mask;
     }
-
-    //return the Ceil(log2(x))
-    uint log2(uint x)
-    {
-        uint i;
-        for(i = 0; x < ((unsigned)1<<i); ++i){}
-        return i;
-    }
-
 
 private:
     struct set_t //set size = sizeof(line_t) + log2(ways)
@@ -159,6 +162,15 @@ private:
 
     std::vector<set_t> m_storage;
     std::tr1::function<void (uint,uint)> m_evictfn;
+};
+
+class PcRelCache: public SetAssociativeCache 
+{
+    virtual uint addrtotag(uint addr)
+    {
+        return addr;
+    }
+
 };
 
 #endif
