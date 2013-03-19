@@ -92,7 +92,7 @@ bool PREDICTOR::get_prediction(
     }
     else if (br->is_conditional)
     {
-        branchTaken = m_TournamentPredictor.shouldBranch(br->instruction_addr);
+        branchTaken = m_AlphaPredictor.shouldBranch(br->instruction_addr);
         *predicted_target_address = m_BranchTargetTable.getitem(br->instruction_addr);
         delta = m_PCRelTable.getitem(br->instruction_addr); 
         if (delta)
@@ -179,7 +179,7 @@ void PREDICTOR::update_predictor(
         putinrelative(br->instruction_addr, actual_target_address, delta) ?
             m_PCRelTable.additem(br->instruction_addr, delta) :
             m_BranchTargetTable.additem(br->instruction_addr, actual_target_address);
-        m_TournamentPredictor.updatePredictor(br->instruction_addr, taken);
+        m_AlphaPredictor.updatePredictor(br->instruction_addr, taken);
     } else
     {
         putinrelative(br->instruction_addr, actual_target_address, delta) ?
