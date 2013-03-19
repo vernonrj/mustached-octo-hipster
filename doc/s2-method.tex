@@ -8,7 +8,7 @@ The main strategy applied in the design of this project was divide and conquer; 
 \end{center}
 \end{figure}
 \subsection{Trace Analysis}
-By analyzing the relative branching distances of branch instructions an interesting pattern emerged in Conditional Branches. A majority of them are backward branching and nearly all of them are contained within 1024 bytes. This information greatly influenced our design decisions outlined in the next major section.
+By analyzing the relative branching distances of branch instructions an interesting pattern emerged in Conditional Branches. Nearly all of conditional branches are contained within 1024 bytes; in the supplied graph all of them are. This information greatly influenced our design decisions outlined in the next major section.
 \begin{figure}
 \begin{center} 
 \includegraphics[width=7.4cm]{"./Calls Branches DIST-SERV-4-density"}
