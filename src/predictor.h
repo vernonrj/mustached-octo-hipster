@@ -53,6 +53,7 @@ public:
 
         m_SizeInBits = numofbits;
     }
+
     /**
      * Increment Counter unless it saturates to its maximum value 
      */
@@ -62,6 +63,7 @@ public:
             ++m_CounterValue;
         return *this;
     }
+
     /**
      * Decrement Counter unless it saturates to its minimum value 
      */
@@ -71,6 +73,7 @@ public:
             --m_CounterValue;
         return *this;
     }
+
     /**
      * Functor operator gets the counter value 
      */
@@ -78,14 +81,17 @@ public:
     {
         return this->GetCounterValue();
     }
+
     uint8_t GetMemoryUsage()
     {
         return m_SizeInBits;
     }
+
     uint8_t GetCounterValue()
     {
         return m_CounterValue;
     }
+
     uint8_t GetCounterMax()
     {
         return (1 << m_SizeInBits);
@@ -112,16 +118,19 @@ class BranchHistory
             // a specified length
             mask = (1 << hist_length) - 1;
         }
+
         uint16_t getHistory()
         {
             return (history & mask);
         }
+
         void updateHistory(bool new_entry)
         {
             history = (history << 1) & mask;
             history |= (new_entry & 0x1);
             return;
         }
+
     private:
         uint32_t history;
         uint32_t mask;
@@ -140,17 +149,18 @@ public:
             history[i] = BranchHistory(HISTORY_BITS);
         }
     }
+
     /**
      * Predict whether control should branch at PC address
      */
     bool shouldBranch(uint32_t address)
     {
-        // Predict the branch outcome at PC address
         uint32_t mask_address = address & MASK_VALUE;
         uint32_t scindex = history[mask_address].getHistory();
 
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
+
     /**
      * Update the predictor using the PC and the branch outcome
      */
@@ -170,6 +180,7 @@ public:
 
         return;
     }
+
 private:
     // Size constants
     static const uint8_t HISTORY_BITS = 10;
@@ -192,6 +203,7 @@ public:
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
             counter[i] = SaturationCounter(2, 1);
     }
+
     /**
      * Predict whether control should branch using path history
      */
@@ -200,6 +212,7 @@ public:
         uint32_t scindex = ghistory.getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
+
     /**
      * Update the predictor using the global history and the branch outcome
      */
@@ -212,6 +225,7 @@ public:
             --counter[scindex];
         return;
     }
+
 private:
     // Size constants
     static const uint32_t HISTORY_BITS = 12;
@@ -234,6 +248,7 @@ public:
         tourn_hist(GlobalHistory()),
         path_history(BranchHistory(12))
     {}
+
     /**
      * Predict whether control should branch
      * using path history and the PC Address
@@ -248,6 +263,7 @@ public:
 
         return (choose_global ? global_prediction : local_prediction);
     }
+
     /**
      * Update the 3 predictors:
      * Tournament and Global based on path history and branch outcome
@@ -292,6 +308,7 @@ public:
 
         return;
     }
+
 private:
     GlobalHistory ghistory;         // Global History
     LocalHistory lhistory;          // Local History
@@ -337,12 +354,15 @@ public:
     CircularStack()
         :m_top(0)
     {}
+
     virtual ~CircularStack() {}
+
     void resize(size_t newsize)
     {
         m_datavector.resize(newsize);
         m_top = (m_top < newsize) ? m_top: m_top % newsize;
     }
+
     /**
      * Push a new element onto the stack
      */
@@ -352,6 +372,7 @@ public:
         m_top = (m_top >= stacksize) ? 0 : m_top + 1;
         m_datavector[m_top] = newvalue;
     }
+
     /**
      * Returns the element currently on the top of the stack.
      */
@@ -361,6 +382,7 @@ public:
         m_top = (m_top == 0) ? m_datavector.size() : m_top - 1; 
         return topelement;
     }
+
     /** returns the memory budget of the stack in bits 
      *   (might want to refactor to allow for arbitrary bit sizes)
      */
@@ -393,9 +415,10 @@ public:
     SetAssociativeCache()
         :m_evictfn(null_evict)
     {}
+
     ~SetAssociativeCache()
-    {
-    }
+    {}
+
     /**
      * Set the number of lines and the associativity
      */
@@ -411,6 +434,7 @@ public:
             i->m_storage.resize(associativity);
         }
     }
+
     // A good use for this is to use bind to have the evict call into
     // a second level caches add. e.g.
     // cacheobject1.setEvictCallBack(
@@ -486,6 +510,7 @@ public:
         }
         return 0;
     }
+
     //return the Ceil(log2(x))
     static uint log2(uint x)
     {
@@ -493,12 +518,14 @@ public:
         for(i = 0; x >= ((unsigned)1<<i); ++i){}
         return i-1;
     }
+
     uint addrtotag(uint addr)
     {
         //calc index bit size
         uint indexbits = log2(m_storage.size());
         return addr >> indexbits;
     }
+
     virtual uint addrtoindex(uint addr)
     {
         //calc index bit size and make mask
@@ -508,6 +535,7 @@ public:
         //mask out all other bits
         return addr & mask;
     }
+
 private:
     struct set_t    //set size = sizeof(line_t) + log2(ways)
     {
