@@ -1,17 +1,22 @@
-\section{Method}
+\section{Methods of Analysis}
+\subsection{Trace File Analysis}
 The main strategy applied in the design of this project was divide and conquer; In order to keep the code as independent as possible the different types of instructions were decoupled. After doing a quick statistical analysis of the break down of instruction types conditionals, calls and returns are the most frequently encountered, in that order. Conditional branches comprised a significant majority of all branches encountered in any of the traces and had a very interesting pattern to them.
 \begin{figure}
-\includegraphics[width=8cm]{"./Conditional Branches DIST-INT-4-histogram"}
+\begin{center}
+\includegraphics[width=7.4cm]{"./Conditional Branches DIST-INT-4-histogram"}
 \caption{Graph showing the typical relative offset breakdown of conditional branches, y axis is in frequency}
+\end{center}
 \end{figure}
 \subsection{Trace Analysis}
-By analyzing the relative branching distances of branch instructions an interesting pattern emerged in Conditional Branches. A majority of them are backward branching and nearly all of them are contained within 1024 bytes. This information greatly influenced our design decisions outlined in the next major section. 
+By analyzing the relative branching distances of branch instructions an interesting pattern emerged in Conditional Branches. A majority of them are backward branching and nearly all of them are contained within 1024 bytes. This information greatly influenced our design decisions outlined in the next major section.
 \begin{figure}
-\includegraphics[width=8cm]{"./Calls Branches DIST-SERV-4-density"}
-\includegraphics[width=8cm]{"./Calls Branches DIST-SERV-4-histogram"}
+\begin{center} 
+\includegraphics[width=7.4cm]{"./Calls Branches DIST-SERV-4-density"}
+\includegraphics[width=7.4cm]{"./Calls Branches DIST-SERV-4-histogram"}
 \caption{Graphs showing the complications in predicting functional calls efficiently}
+\end{center}
 \end{figure}
-Functional calls were more staggered as far as PC relative. Across all of the traces however there were interesting density patterns for calls. Almost all of the branches are concentrated in two areas. Which directly corresponds to a typical virtual address space implemented on most operating systems. The density graph shows that 
+Functional calls were more staggered as far as PC relative. Across all of the traces however there were interesting density patterns for calls. Almost all of the branches are concentrated in two areas. Which directly corresponds to a typical virtual address space implemented on most operating systems. The density graph shows a typical $.text$ segment and a shared library address space. With branches rare or non existent in the stack and heap. The exception to this is some of the server trace files, which is quite possibly an application level virtual machine looking at how many times it calls into an area normally reserved to the heap.
 
-\subsection{Memory Constraints}
-8KB was the hard limit required for the project.
+\subsection{Memory Analysis}
+8KB was the non-negotiable limit required for the project. To get an overview of the budget requirements and range of space that can be covered a spreadsheet was made showing a variety of cache configurations.
