@@ -1,3 +1,7 @@
 \section{Design}
 This project is about blah.... blah blah blah
 
+\subsection{Alpha Predictor Design}
+The Alpha Predictor uses global prediction, and local prediction. The global prediction is indexed by a global path history into an array of saturating counters. The local prediction is indexed by PC into a local history table; the result of the local history table is then used to index into an array of saturating counters.
+
+\subsection{Branch Target Buffer Design}
