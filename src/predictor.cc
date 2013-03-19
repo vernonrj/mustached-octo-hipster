@@ -38,11 +38,12 @@ static uint s_GenericMiss              = 0;
 
 
 PREDICTOR::PREDICTOR()
-: m_BranchTargetTable(64, 4),
- m_PCRelTable(1024, 4)
+: m_BranchTargetTable(),
+ m_PCRelTable()
 {
     //get environment variables to setup cache - remember to keep track of mem usage
     m_callstack.resize(getenvironmentint("predictor_callstack_size", 16));
+    m_PCRelTable.setDimentions(256, 4);
 }
 
 PREDICTOR::~PREDICTOR()
@@ -75,8 +76,8 @@ bool PREDICTOR::get_prediction(
     if (br->is_call)
     {
         //push address onto stack
-        //*predicted_target_address = m_AbsolutePredictorTable[br->instruction_addr];
-        *predicted_target_address = m_PCRelTable.getitem(br->instruction_addr);
+        *predicted_target_address = 
+            m_PCRelTable.getitem(br->instruction_addr);
         m_callstack.push(br->instruction_next_addr);
         branchTaken = true;
     }
@@ -92,14 +93,12 @@ bool PREDICTOR::get_prediction(
 
         *predicted_target_address =
             m_PCRelTable.getitem(br->instruction_addr);
-            //m_AbsolutePredictorTable[br->instruction_addr];
     }
     else 
     {
         // Unconditional Branch
         *predicted_target_address =
             m_PCRelTable.getitem(br->instruction_addr);
-            //m_AbsolutePredictorTable[br->instruction_addr];
  
         branchTaken = true;
     }
@@ -120,7 +119,6 @@ void PREDICTOR::update_predictor(
     uint actual_target_address)
 {
 
-    uint evaddress, evdata;
     //Miss Detection
     //Test for prediction miss
     if(s_PreviousBranchPrediction != taken)
@@ -159,24 +157,18 @@ void PREDICTOR::update_predictor(
     //update tables and predictors
     if(br->is_call)
     {
-        //m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
-        m_PCRelTable.additem(br->instruction_addr, actual_target_address,
-                evaddress, evdata);
+        m_PCRelTable.additem(br->instruction_addr, actual_target_address);
     } else if(br->is_return)
     {
 
     } else if (br->is_conditional)
     {
-        //m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
-        m_PCRelTable.additem(br->instruction_addr, actual_target_address,
-                evaddress, evdata);
+        m_PCRelTable.additem(br->instruction_addr, actual_target_address);
         m_TournamentPredictor.updatePredictor(br->instruction_addr, taken);
     } else
     {
 
-        m_PCRelTable.additem(br->instruction_addr, actual_target_address,
-                evaddress, evdata);
-        //m_AbsolutePredictorTable[br->instruction_addr] = actual_target_address;
+        m_PCRelTable.additem(br->instruction_addr, actual_target_address);
     }
 
 }

@@ -28,8 +28,6 @@ public:
     void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken, uint actual_target_address);
 private:
     TournamentPredictor m_TournamentPredictor;
-    //HashTable<uint, uint> m_RelativePredictorTable;
-    //HashTable<uint, uint> m_AbsolutePredictorTable;
     SetAssociativeCache m_BranchTargetTable;
     SetAssociativeCache m_PCRelTable;
     CircularStack<uint> m_callstack;

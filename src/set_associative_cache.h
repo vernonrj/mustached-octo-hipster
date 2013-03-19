@@ -78,12 +78,12 @@ public:
                element.used = ~element.used;
                if(element.used == true) // value to be evicted
                {
-                   element.tag = tag;
                    evaddress = (addr & (tag << log2(m_storage.size())));
                    evdata = element.value;
                    if(evaddress != 0)
                        m_evictfn(evaddress, evdata);
 
+                   element.tag = tag;
                    element.value = data;
                    return;
                }
@@ -114,10 +114,10 @@ private: //helper functions
     {
         uint i;
         for(i = 0; x >= ((unsigned)1<<i); ++i){}
-        return i;
+        return i-1;
     }
 
-    virtual uint addrtotag(uint addr)
+    uint addrtotag(uint addr)
     {
        //calc index bit size
         uint indexbits = log2(m_storage.size());
@@ -133,7 +133,6 @@ private: //helper functions
         //mask out all other bits
         return addr & mask;
     }
-
 private:
     struct set_t //set size = sizeof(line_t) + log2(ways)
     {
