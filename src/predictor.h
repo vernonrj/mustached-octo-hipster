@@ -379,7 +379,7 @@ public:
     T pop()
     {
         T topelement = m_datavector[m_top];
-        m_top = (m_top == 0) ? m_datavector.size() : m_top - 1; 
+        m_top = (m_top == 0) ? m_datavector.size() - 1 : m_top - 1; 
         return topelement;
     }
 
