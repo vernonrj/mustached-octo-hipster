@@ -119,9 +119,11 @@ bool PREDICTOR::get_prediction(
     return branchTaken;
 }
 
-// Update the predictor after a prediction has been made.  This should accept
-// the branch record (br) and architectural state (os), as well as a third
-// argument (taken) indicating whether or not the branch was taken.
+/**
+ * Update the predictor after a prediction has been made.  This should accept
+ * the branch record (br) and architectural state (os), as well as a third
+ * argument (taken) indicating whether or not the branch was taken.
+ */
 void PREDICTOR::update_predictor(
     const branch_record_c* br, 
     const op_state_c* os, 
@@ -165,7 +167,7 @@ void PREDICTOR::update_predictor(
     }
 
 
-    //update tables and predictors
+    // update tables and predictors
     if(br->is_call)
     {
         putinrelative(br->instruction_addr, actual_target_address, delta) ?
@@ -191,6 +193,11 @@ void PREDICTOR::update_predictor(
 
 // Static 'helper' functions - all functions below should be prefixed with 'static'
 
+
+/**
+ * Check to see if the address should be
+ * put into the relative cache, or in the direct cache
+ */
 static bool putinrelative(uint instruction, uint target, int& delta)
 {
     uint abs_off = ((instruction > target)? instruction - target:
@@ -203,6 +210,7 @@ static bool putinrelative(uint instruction, uint target, int& delta)
     else
         return false;
 }
+
 
 static int getenvironmentint(const char* env_name, int defaultvalue = 0)
 {
