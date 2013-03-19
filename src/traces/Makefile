@@ -17,5 +17,4 @@ cleanpdf:
 
 %.pdf: %.txt
 	./analysis.R $* 
-	mv -f Rplots.pdf $@
 

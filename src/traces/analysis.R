@@ -12,14 +12,24 @@ csvdata = read.csv(paste(filename,sep='', '.txt'),head=TRUE, sep=",")
 makeplots <- function(datatable, title)
 {
     ndatatable <- subset(datatable, datatable$Taken==1)
+
     #density
+    pdf(paste(title,sep='',"-density" ,".pdf"))
     d <- density(unique(ndatatable$InstructionAddress))
     plot(d, main=paste("Branch Density vs Address Space", title))
+    dev.off()
+
     #histogram
-    barplot(table(ndatatable$InstructionAddress), main=paste("Branch Frequency", title))
+    pdf(paste(title,sep='',"-histogram" ,".pdf"))
+    barplot(table(ndatatable$InstructionAddress), 
+        main=paste("Branch Frequency", title))
+    dev.off()
+
     #Branch Distance
+    pdf(paste(title,sep='',"-histogram" ,".pdf"))
     displacement = ndatatable$InstructionAddress - ndatatable$Target
     barplot(table(displacement), main=paste("Taken Target Displacement", title))
+    dev.off()
 }
 
 #Analyze all instructions
