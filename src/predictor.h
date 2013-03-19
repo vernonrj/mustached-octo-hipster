@@ -12,11 +12,12 @@
 #include "circular_stack.h"
 #include "TournamentPredictor.h"
 #include "set_associative_cache.h"
-#include "hashtable.h"
+//#include "hashtable.h"
 #include "op_state.h"   // defines op_state_c (architectural state) class 
 #include "tread.h"      // defines branch_record_c class
 
 typedef CircularStack<uint32_t> Callstack;
+static const uint RELATIVE_OFFSET = 10;
 
 class PREDICTOR
 {

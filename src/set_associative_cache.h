@@ -4,6 +4,7 @@
 #include<tr1/functional>
 #include<algorithm>
 
+
 // This class implements a fully associative cache.
 // LRU replacement is implemented with the clock algorithm.
 class SetAssociativeCache
@@ -108,7 +109,6 @@ public:
        }
         return 0;
     }
-private: //helper functions
     //return the Ceil(log2(x))
     static uint log2(uint x)
     {
