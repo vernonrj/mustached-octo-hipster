@@ -4,15 +4,15 @@ The Branch Target Buffer does a target lookup on all branch types. The Alpha Pre
 \subsection{Alpha Predictor Design}
 The Alpha Predictor uses global prediction, and local prediction. The global prediction is indexed by a global path history into an array of saturating counters. The local prediction is indexed by PC into a local history table; the result of the local history table is then used to index into an array of saturating counters.
 
-\subsection{Return Stack Design}
-The return stack is an array with an index. There is no validity checking on the return stack. 
+\subsection{Return Address Stack Design}
+The Return Address stack is implemented as a dirty circular buffer. The stack is dirty because if the stack runs out of entries it will loop around and continue to return old values in the stack. When addresses are pushed onto stack they have to potential to overwrite old values on the bottom of the stack. This is useful in the rare cases that there is a recursive function that is not tail call optimized as the stack will continue to return roughly the same sequence as was pushed on to it. When a call function is encountered the address of the next instruction gets pushed onto the stack. When a return instruction is encountered an address gets popped from the stack and predicted.
 
 \subsection{Branch Target Buffer Design}
-The Branch Target Buffer consists of an absolute cache, a PC-relative cache, and a circular return stack.
+The Branch Target Buffer consists of an absolute cache, a PC-relative cache, and a circular return stack. On a prediction both caches are queried and either cache that makes a prediction is the value of the prediction. Values are stored in these caches depending on whether the difference between the branch instruction and branch target differ by less than 1024 bytes. If it can be represented than the prediction target gets put into the PC-relative cache, otherwise it goes into the absolute cache. 
 
 \subsection{Relative vs Absolute}
-Two caches are utilized for the Branch Target Buffer. A larger PC-relative cache is used for targets that are less than 1024 absolute bytes away from the instruction. This means that only 11 bits are needed for the data section of the PC-relative cache. This, combined with a 25-bit tag size, a four-way cache and 4 bits of LRU overhead per line, gives a total line size of 148 bits. 148 bits per line, with 128 lines, gives a cache size of 18,944 bits, or 18.5Kbits.
+Two caches are utilized for the Branch Target Buffer. A larger PC-relative cache is used for targets that are less than 1024 absolute bytes away from the instruction. This means that only 11 bits are needed for the data section of the PC-relative cache. This, combined with a 25-bit tag size, a four-way cache and 4 bits of LRU overhead per set, gives a total set size of 148 bits. 148 bits per set, with 128 set, gives a cache size of 18,944 bits, or 18.5Kbits.
 
-The absolute cache directly uses the lower-order 6 bits of the address to index into a table. It has a data size of 32-bits with a 26-bit tag size. With a four-way cache and 4 bits of LRU overhead per line, the total line size is 236 bits per line. 236 bits per line, with 64 lines, gives a cache size of 15104 bits, or 14.75Kbits.
+The absolute cache directly uses the lower-order 6 bits of the address to index into a table. It has a data size of 32-bits with a 26-bit tag size. With a four-way cache and 4 bits of LRU overhead per line, the total line size is 236 bits per line. 236 bits per set, with 64 set, gives a cache size of 15104 bits, or 14.75Kbits.
 
 This means that the relative and absolute caches use 34048 bits, or 33.25Kbits. 
