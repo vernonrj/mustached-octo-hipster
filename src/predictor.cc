@@ -197,7 +197,7 @@ void PREDICTOR::update_predictor(
 
 static bool putinrelative(uint instruction, uint target, int& delta)
 {
-    uint abs_off = (instruction > target? instruction - target:
+    uint abs_off = ((instruction > target)? instruction - target:
                                           target - instruction);
     if (abs_off < RELATIVE_OFFSET)    
     {
