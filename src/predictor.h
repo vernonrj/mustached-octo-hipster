@@ -369,7 +369,7 @@ public:
     void push(T newvalue)
     {
         size_t stacksize = m_datavector.size();
-        m_top = (m_top >= stacksize) ? 0 : m_top + 1;
+        m_top = ((m_top + 1) >= stacksize) ? 0 : m_top + 1;
         m_datavector[m_top] = newvalue;
     }
 
