@@ -15,7 +15,6 @@
 
 // forward declarations
 static int getenvironmentint(const char* env_name, int defaultvalue);
-static uint absoluteoffset(uint x, uint y);
 static bool putinrelative(uint instruction, uint target, int& delta);
 
 
@@ -45,8 +44,8 @@ PREDICTOR::PREDICTOR()
 {
     //get environment variables to setup cache - remember to keep track of mem usage
     m_callstack.resize(getenvironmentint("predictor_callstack_size", 16));
-    m_PCRelTable.setDimentions(128, 4);
-    m_BranchTargetTable.setDimentions(64, 4);
+    m_PCRelTable.setDimensions(128, 4);
+    m_BranchTargetTable.setDimensions(64, 4);
 }
 
 PREDICTOR::~PREDICTOR()
@@ -76,7 +75,6 @@ bool PREDICTOR::get_prediction(
     int delta;
 
     bool branchTaken = false;
-    using namespace std;
 
     if (br->is_call)
     {
@@ -85,8 +83,7 @@ bool PREDICTOR::get_prediction(
         delta = m_PCRelTable.getitem(br->instruction_addr); 
         if (delta)
         {
-            *predicted_target_address = static_cast<int>(br->instruction_addr)+delta;
-            //cout << br->instruction_addr << "\t" << *predicted_target_address << "\t";
+            *predicted_target_address = static_cast<int>(br->instruction_addr+delta);
         }
         m_callstack.push(br->instruction_next_addr);
         branchTaken = true;
@@ -100,18 +97,12 @@ bool PREDICTOR::get_prediction(
     else if (br->is_conditional)
     {
         branchTaken = m_TournamentPredictor.shouldBranch(br->instruction_addr);
-        if (branchTaken)
+        *predicted_target_address = m_BranchTargetTable.getitem(br->instruction_addr);
+        delta = m_PCRelTable.getitem(br->instruction_addr); 
+        if (delta)
         {
-            *predicted_target_address = m_BranchTargetTable.getitem(br->instruction_addr);
-            delta = m_PCRelTable.getitem(br->instruction_addr); 
-            if (delta)
-            {
-                *predicted_target_address = static_cast<int>(br->instruction_addr)+delta;
-                //cout << br->instruction_addr << "\t" << *predicted_target_address << "\t";
-            }
+            *predicted_target_address = static_cast<int>(br->instruction_addr+delta);
         }
-        else
-            *predicted_target_address = br->instruction_next_addr;
     }
     else 
     {
@@ -120,8 +111,7 @@ bool PREDICTOR::get_prediction(
         delta = m_PCRelTable.getitem(br->instruction_addr); 
         if (delta)
         {
-            *predicted_target_address = static_cast<int>(br->instruction_addr)+delta;
-            //cout << br->instruction_addr << "\t" << *predicted_target_address << "\t";
+            *predicted_target_address = static_cast<int>(br->instruction_addr+delta);
         }
  
         branchTaken = true;
@@ -142,6 +132,7 @@ void PREDICTOR::update_predictor(
     bool taken, 
     uint actual_target_address)
 {
+    int delta;
 
     //Miss Detection
     //Test for prediction miss
@@ -175,12 +166,8 @@ void PREDICTOR::update_predictor(
                   s_UnconditionalMisses + 1:
                   s_UnconditionalMisses;
         ++s_GenericMiss;
-        using namespace std;
-        cout << hex << br->instruction_addr << "\t" << s_PreviousTargetPrediction << "\t" << actual_target_address << "\t" 
-            <<  static_cast<int>(actual_target_address - br->instruction_addr) << endl;
     }
 
-    int delta;
 
     //update tables and predictors
     if(br->is_call)
@@ -203,10 +190,6 @@ void PREDICTOR::update_predictor(
             m_PCRelTable.additem(br->instruction_addr, delta) :
             m_BranchTargetTable.additem(br->instruction_addr, actual_target_address);
     }
-    /*
-    cout << actual_target_address << "\t" << 
-        (s_PreviousTargetPrediction == actual_target_address) << endl;
-        */
 
 }
 
@@ -218,7 +201,7 @@ static bool putinrelative(uint instruction, uint target, int& delta)
                                           target - instruction);
     if (abs_off < RELATIVE_OFFSET)    
     {
-        delta =  static_cast<int>(target) - static_cast<int>(instruction);
+        delta =  static_cast<int>(target - instruction);
         return true;
     }
     else

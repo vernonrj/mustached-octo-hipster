@@ -22,7 +22,7 @@ public:
     {
     }
 
-    void setDimentions(uint sets, uint associativity=1)
+    void setDimensions(uint sets, uint associativity=1)
     {
         using namespace std;
         m_storage.clear(); //clear out cache before resize
