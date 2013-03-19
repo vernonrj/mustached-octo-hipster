@@ -39,7 +39,7 @@ PREDICTOR::PREDICTOR()
  m_PCRelTable()
 {
     //get environment variables to setup cache - remember to keep track of mem usage
-    m_callstack.resize(getenvironmentint("predictor_callstack_size", 16));
+    m_callstack.resize(getenvironmentint("predictor_callstack_size", 55));
     m_PCRelTable.setDimensions(128, 4);
     m_BranchTargetTable.setDimensions(64, 4);
 }
