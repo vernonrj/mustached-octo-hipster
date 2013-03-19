@@ -8,8 +8,6 @@
 #include "SaturationCounter.h"
 #include "TournamentPredictor.h"
 #include "predictor.h"
-#include "fully_associative_cache.h"
-#include "set_associative_cache.h"
 
 // tuning parameters
 
