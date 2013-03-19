@@ -1,5 +1,5 @@
 \section{Design}
-This project is about blah.... blah blah blah
+The Branch Target Buffer does a target lookup on all branch types. The Alpha Predictor only returns a prediction on a conditional branch.
 
 \subsection{Alpha Predictor Design}
 The Alpha Predictor uses global prediction, and local prediction. The global prediction is indexed by a global path history into an array of saturating counters. The local prediction is indexed by PC into a local history table; the result of the local history table is then used to index into an array of saturating counters.
@@ -8,6 +8,7 @@ The Alpha Predictor uses global prediction, and local prediction. The global pre
 The return stack is an array with an index. There is no validity checking on the return stack. 
 
 \subsection{Branch Target Buffer Design}
+The Branch Target Buffer consists of an absolute cache, a PC-relative cache, and a circular return stack.
 
 \subsection{Relative vs Absolute}
 Two caches are utilized for the Branch Target Buffer. A larger PC-relative cache is used for targets that are less than 1024 absolute bytes away from the instruction. This means that only 11 bits are needed for the data section of the PC-relative cache. This, combined with a 25-bit tag size, a four-way cache and 4 bits of LRU overhead per line, gives a total line size of 148 bits. 148 bits per line, with 128 lines, gives a cache size of 18,944 bits, or 18.5Kbits.
