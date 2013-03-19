@@ -1,0 +1,21 @@
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   101253 / 29499988 =   3.432
+1000*wrong_tpredicts/total insts: 1000 *   101642 / 29499988 =   3.445
+total branches:                   2616522
+total cc branches:                2213673
+total predicts:                   2213673
+*********************************************************
+Target Stats:
+     CallMisses  : 216
+     ReturnMisses: 17
+     ConBranchMis: 1001
+     IndirectMiss: 100
+     Unconditiona: 94
+     TotalMisses : 1344
+Prediction Stats:
+     CallMisses  : 0
+     ReturnMisses: 0
+     ConBranchMis: 101253
+     IndirectMiss: 0
+     Unconditiona: 0
+     TotalMisses : 101253
