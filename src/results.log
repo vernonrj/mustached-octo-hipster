@@ -1,1 +1,240 @@
-results.log
+
+
+
+
+../../src/traces/DIST-FP-1
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   101253 / 29499988 =   3.432
+1000*wrong_tpredicts/total insts: 1000 *   101779 / 29499988 =   3.450
+total branches:                   2616522
+total cc branches:                2213673
+total predicts:                   2213673
+*********************************************************
+
+
+
+
+../../src/traces/DIST-FP-2
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    37979 / 29499869 =   1.287
+1000*wrong_tpredicts/total insts: 1000 *    38414 / 29499869 =   1.302
+total branches:                   1805454
+total cc branches:                1792835
+total predicts:                   1792835
+*********************************************************
+
+
+
+
+../../src/traces/DIST-FP-3
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    15190 / 29499978 =   0.515
+1000*wrong_tpredicts/total insts: 1000 *    15851 / 29499978 =   0.537
+total branches:                   1573540
+total cc branches:                1546797
+total predicts:                   1546797
+*********************************************************
+
+
+
+
+../../src/traces/DIST-FP-4
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *     7672 / 29499976 =   0.260
+1000*wrong_tpredicts/total insts: 1000 *     8225 / 29499976 =   0.279
+total branches:                    921402
+total cc branches:                 895842
+total predicts:                    895842
+*********************************************************
+
+
+
+
+../../src/traces/DIST-FP-5
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    68986 / 29499969 =   2.339
+1000*wrong_tpredicts/total insts: 1000 *    69221 / 29499969 =   2.346
+total branches:                   2722674
+total cc branches:                2422049
+total predicts:                   2422049
+*********************************************************
+
+
+
+
+../../src/traces/DIST-INT-1
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   252268 / 29499987 =   8.551
+1000*wrong_tpredicts/total insts: 1000 *   256760 / 29499987 =   8.704
+total branches:                   4989048
+total cc branches:                4184792
+total predicts:                   4184792
+*********************************************************
+
+
+
+
+../../src/traces/DIST-INT-2
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   350699 / 29499985 =  11.888
+1000*wrong_tpredicts/total insts: 1000 *   492928 / 29499985 =  16.709
+total branches:                   3671448
+total cc branches:                2866495
+total predicts:                   2866495
+*********************************************************
+
+
+
+
+../../src/traces/DIST-INT-3
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   364708 / 29499978 =  12.363
+1000*wrong_tpredicts/total insts: 1000 *   379056 / 29499978 =  12.849
+total branches:                   4136429
+total cc branches:                3771697
+total predicts:                   3771697
+*********************************************************
+
+
+
+
+../../src/traces/DIST-INT-4
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    84712 / 29499960 =   2.872
+1000*wrong_tpredicts/total insts: 1000 *   122564 / 29499960 =   4.155
+total branches:                   2432848
+total cc branches:                2069894
+total predicts:                   2069894
+*********************************************************
+
+
+
+
+../../src/traces/DIST-INT-5
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    13800 / 29499990 =   0.468
+1000*wrong_tpredicts/total insts: 1000 *    21611 / 29499990 =   0.733
+total branches:                   3818636
+total cc branches:                3755315
+total predicts:                   3755315
+*********************************************************
+
+
+
+
+../../src/traces/DIST-MM-1
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   259237 / 29499979 =   8.788
+1000*wrong_tpredicts/total insts: 1000 *   260191 / 29499979 =   8.820
+total branches:                   2784449
+total cc branches:                2229289
+total predicts:                   2229289
+*********************************************************
+
+
+
+
+../../src/traces/DIST-MM-2
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   313832 / 29499970 =  10.638
+1000*wrong_tpredicts/total insts: 1000 *   324530 / 29499970 =  11.001
+total branches:                   4213315
+total cc branches:                3809780
+total predicts:                   3809780
+*********************************************************
+
+
+
+
+../../src/traces/DIST-MM-3
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    45874 / 29499970 =   1.555
+1000*wrong_tpredicts/total insts: 1000 *   233027 / 29499970 =   7.899
+total branches:                   4953146
+total cc branches:                3014850
+total predicts:                   3014850
+*********************************************************
+
+
+
+
+../../src/traces/DIST-MM-4
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *    62739 / 29499993 =   2.127
+1000*wrong_tpredicts/total insts: 1000 *    85553 / 29499993 =   2.900
+total branches:                   5084440
+total cc branches:                4874888
+total predicts:                   4874888
+*********************************************************
+
+
+
+
+../../src/traces/DIST-MM-5
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   190238 / 29499791 =   6.449
+1000*wrong_tpredicts/total insts: 1000 *   407814 / 29499791 =  13.824
+total branches:                   3406316
+total cc branches:                2563897
+total predicts:                   2563897
+*********************************************************
+
+
+
+
+../../src/traces/DIST-SERV-1
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   286823 / 29499316 =   9.723
+1000*wrong_tpredicts/total insts: 1000 *  1080829 / 29499316 =  36.639
+total branches:                   5607148
+total cc branches:                3660616
+total predicts:                   3660616
+*********************************************************
+
+
+
+
+../../src/traces/DIST-SERV-2
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   297767 / 29499198 =  10.094
+1000*wrong_tpredicts/total insts: 1000 *  1085153 / 29499198 =  36.786
+total branches:                   5443962
+total cc branches:                3537562
+total predicts:                   3537562
+*********************************************************
+
+
+
+
+../../src/traces/DIST-SERV-3
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   241865 / 29499817 =   8.199
+1000*wrong_tpredicts/total insts: 1000 *   564667 / 29499817 =  19.141
+total branches:                   5358488
+total cc branches:                3811906
+total predicts:                   3811906
+*********************************************************
+
+
+
+
+../../src/traces/DIST-SERV-4
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   320445 / 29498081 =  10.863
+1000*wrong_tpredicts/total insts: 1000 *  1139837 / 29498081 =  38.641
+total branches:                   6299843
+total cc branches:                4266796
+total predicts:                   4266796
+*********************************************************
+
+
+
+
+../../src/traces/DIST-SERV-5
+*********************************************************
+1000*wrong_cc_bpredicts/total insts: 1000 *   336970 / 29497759 =  11.424
+1000*wrong_tpredicts/total insts: 1000 *  1224546 / 29497759 =  41.513
+total branches:                   6411192
+total cc branches:                4291964
+total predicts:                   4291964
+*********************************************************
