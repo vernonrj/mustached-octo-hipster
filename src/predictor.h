@@ -1,7 +1,7 @@
-/* Author: Mark Faust
+/* Author: Tyler Tricker, Vernon Jones
  *
  * C version of predictor file
-*/
+ */
 
 #ifndef PREDICTOR_H_SEEN
 #define PREDICTOR_H_SEEN
@@ -16,6 +16,21 @@
 #include "tread.h"      // defines branch_record_c class
 
 
+/**
+ * Definitions
+ */
+static const uint RELATIVE_OFFSET = 1 << 10;
+
+
+
+/** 
+ * The Alpha Predictor Implementation
+ * Uses a Tournament Predictor to choose between
+ * a Global Predictor
+ * and a Local Predictor
+ */
+
+
 class SaturationCounter
 {
 public:
@@ -26,7 +41,7 @@ public:
 
     void ChangeNumofBits(uint8_t numofbits, uint8_t initialValue)
     {
-        
+
         // Sanity Check parameters
         if((numofbits >= 8) || (numofbits < 1))
             numofbits = 1;
@@ -38,45 +53,39 @@ public:
 
         m_SizeInBits = numofbits;
     }
-
     /**
-    * Increment Counter unless it saturates to its maximum value 
-    */
+     * Increment Counter unless it saturates to its maximum value 
+     */
     SaturationCounter& operator++()
     {
         if(m_CounterValue < (1 << m_SizeInBits)) 
             ++m_CounterValue;
         return *this;
     }
-
     /**
-    * Decrement Counter unless it saturates to its minimum value 
-    */
+     * Decrement Counter unless it saturates to its minimum value 
+     */
     SaturationCounter& operator--()
     {
         if(m_CounterValue != 0)
             --m_CounterValue;
         return *this;
     }
-
     /**
-    * Functor operator gets the counter value 
-    */
+     * Functor operator gets the counter value 
+     */
     uint8_t operator() ()
     {
-       return this->GetCounterValue();
+        return this->GetCounterValue();
     }
-
     uint8_t GetMemoryUsage()
     {
         return m_SizeInBits;
     }
-
     uint8_t GetCounterValue()
     {
         return m_CounterValue;
     }
-
     uint8_t GetCounterMax()
     {
         return (1 << m_SizeInBits);
@@ -90,39 +99,32 @@ private:
 
 
 
-
-
-// The Alpha Predictor
-// Uses a Tournament Predictor to choose between
-// a Global Predictor
-// and a Local Predictor
-
 class BranchHistory
 {
-// Records the Branch History
-public:
-	BranchHistory(uint8_t hist_length = 10)
-	{
-        if (hist_length > 20 || hist_length <= 0)
-            hist_length = 10;   // Sanity Check
-        history = 0x0;
-        // Generate a mask to hold history at
-        // a specified length
-        mask = (1 << hist_length) - 1;
-	}
-	uint16_t getHistory()
-	{
-        return (history & mask);
-	}
-	void updateHistory(bool new_entry)
-	{
-        history = (history << 1) & mask;
-        history |= (new_entry & 0x1);
-		return;
-	}
-private:
-    uint32_t history;
-    uint32_t mask;
+    // Records the Branch History
+    public:
+        BranchHistory(uint8_t hist_length = 10)
+        {
+            if (hist_length > 20 || hist_length <= 0)
+                hist_length = 10;   // Sanity Check
+            history = 0x0;
+            // Generate a mask to hold history at
+            // a specified length
+            mask = (1 << hist_length) - 1;
+        }
+        uint16_t getHistory()
+        {
+            return (history & mask);
+        }
+        void updateHistory(bool new_entry)
+        {
+            history = (history << 1) & mask;
+            history |= (new_entry & 0x1);
+            return;
+        }
+    private:
+        uint32_t history;
+        uint32_t mask;
 };
 
 
@@ -138,6 +140,9 @@ public:
             history[i] = BranchHistory(HISTORY_BITS);
         }
     }
+    /**
+     * Predict whether control should branch at PC address
+     */
     bool shouldBranch(uint32_t address)
     {
         // Predict the branch outcome at PC address
@@ -146,6 +151,9 @@ public:
 
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
+    /**
+     * Update the predictor using the PC and the branch outcome
+     */
     void updatePredictor(uint32_t address, bool outcome)
     {
         uint32_t mask_address = address & MASK_VALUE;
@@ -174,6 +182,7 @@ private:
 };
 
 
+
 class GlobalHistory
 {
 // class to manage global history
@@ -183,19 +192,23 @@ public:
         for (uint32_t i=0; i<HISTORY_SIZE; i++)
             counter[i] = SaturationCounter(2, 1);
     }
+    /**
+     * Predict whether control should branch using path history
+     */
     bool shouldBranch(BranchHistory ghistory)
     {
-        // Predict the branch outcome based on the global path history
         uint32_t scindex = ghistory.getHistory();
         return counter[scindex]() >= (counter[scindex].GetCounterMax() >> 1);
     }
+    /**
+     * Update the predictor using the global history and the branch outcome
+     */
     void updatePredictor(BranchHistory ghistory, bool outcome)
     {
-        // Update Saturating Counter based on outcome
         uint32_t scindex = ghistory.getHistory();
-        if (outcome)		// taken
+        if (outcome)    // taken
             ++counter[scindex];
-        else 			// not taken
+        else            // not taken
             --counter[scindex];
         return;
     }
@@ -208,20 +221,26 @@ private:
 };
 
 
+/**
+ * Alpha Predictor Proper
+ */
+
 class AlphaPredictor
 {
-// Implements the alpha predictor
 public:
     AlphaPredictor()
         :ghistory(GlobalHistory()),
-         lhistory(LocalHistory()),
-         tourn_hist(GlobalHistory()),
-         path_history(BranchHistory(12))
+        lhistory(LocalHistory()),
+        tourn_hist(GlobalHistory()),
+        path_history(BranchHistory(12))
     {}
+    /**
+     * Predict whether control should branch
+     * using path history and the PC Address
+     */
     bool shouldBranch(uint32_t address)
     {
-        // Test whether we should branch
-        
+
         // Get predictions from local, global, and tournament
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
@@ -229,10 +248,14 @@ public:
 
         return (choose_global ? global_prediction : local_prediction);
     }
+    /**
+     * Update the 3 predictors:
+     * Tournament and Global based on path history and branch outcome
+     * Local based on PC Address and branch outcome
+     */
     void updatePredictor(uint32_t address, bool outcome)
     {
-        // Update All Predictors based on branch outcome at PC address
-        
+
         // First recheck our predictions
         bool local_prediction = lhistory.shouldBranch(address);
         bool global_prediction = ghistory.shouldBranch(path_history);
@@ -243,6 +266,8 @@ public:
         lhistory.updatePredictor(address, outcome);
         ghistory.updatePredictor(path_history, outcome);
 
+        // Update Tournament Predictor only if
+        // global and local predictors predicted differently
         if (local_prediction != global_prediction)
         {
             // Predictors predicted differently.
@@ -276,64 +301,88 @@ private:
 
 
 
-// this is a dirty circular stack - it will return an old value or overwrite
-// an old value if it runs out of bounds
+
+/**
+ * Branch Target Predictor Implementation
+ * Uses a PC-relative-indexed cache and a PC-indexed cache
+ *
+ * PC-relative:     4-way set-associative, 128 lines,
+ *                  4 bits LRU overhead per line,
+ *                  25-bit tag size, 11-bit way size
+ *
+ *                  Used when the target address is within
+ *                  1024 words
+ *
+ *
+ * PC-indexed:      4-way set-associative, 64 lines,
+ *                  4 bits LRU overhead per line,
+ *                  26-bit tag size, 32-bit way size
+ *
+ *                  Used when the target address is not within
+ *                  1024 words
+ */
+
+
+/**
+ * this is a dirty circular stack - it will return an old value or overwrite
+ * an old value if it runs out of bounds
+ */
 
 template <typename T>
 class CircularStack
 {
-   //local definitions
+//local definitions
 
 public:
-   CircularStack()
-   :m_top(0)
-   {}
-
-   virtual ~CircularStack() {}
-   void resize(size_t newsize)
-   {
-       m_datavector.resize(newsize);
-       m_top = (m_top < newsize) ? m_top: m_top % newsize;
-   }
-
-   /**
-    * Push a new element onto the stack
-    */
-   void push(T newvalue)
-   {
-      size_t stacksize = m_datavector.size();
-      m_top = (m_top >= stacksize) ? 0 : m_top + 1;
-      m_datavector[m_top] = newvalue;
-   }
-
-   /**
-    * Returns the element currently on the top of the stack.
-    */
-   T pop()
-   {
-      T topelement = m_datavector[m_top];
-      m_top = (m_top == 0) ? m_datavector.size() : m_top - 1; 
-      return topelement;
-   }
-
-   /** returns the memory budget of the stack in bits 
-   *   (might want to refactor to allow for arbitrary bit sizes)
-   */
-   size_t memoryusage()
-   {
-      return sizeof(T)*8*m_datavector.size();
-   }
+    CircularStack()
+        :m_top(0)
+    {}
+    virtual ~CircularStack() {}
+    void resize(size_t newsize)
+    {
+        m_datavector.resize(newsize);
+        m_top = (m_top < newsize) ? m_top: m_top % newsize;
+    }
+    /**
+     * Push a new element onto the stack
+     */
+    void push(T newvalue)
+    {
+        size_t stacksize = m_datavector.size();
+        m_top = (m_top >= stacksize) ? 0 : m_top + 1;
+        m_datavector[m_top] = newvalue;
+    }
+    /**
+     * Returns the element currently on the top of the stack.
+     */
+    T pop()
+    {
+        T topelement = m_datavector[m_top];
+        m_top = (m_top == 0) ? m_datavector.size() : m_top - 1; 
+        return topelement;
+    }
+    /** returns the memory budget of the stack in bits 
+     *   (might want to refactor to allow for arbitrary bit sizes)
+     */
+    size_t memoryusage()
+    {
+        return sizeof(T)*8*m_datavector.size();
+    }
 
 private:
-   std::vector<T> m_datavector;
-   size_t m_top;
+    std::vector<T> m_datavector;
+    size_t m_top;
 };
 
 
 
 
-// This class implements a fully associative cache.
-// LRU replacement is implemented with the clock algorithm.
+/**
+ * This class implements a set-associative cache.
+ * LRU replacement is implemented with the clock algorithm.
+ */
+
+
 class SetAssociativeCache
 {
     //private forward declarations
@@ -342,26 +391,26 @@ class SetAssociativeCache
     static void null_evict(uint,uint){}
 public:
     SetAssociativeCache()
-    :m_evictfn(null_evict)
+        :m_evictfn(null_evict)
     {}
-
     ~SetAssociativeCache()
     {
     }
-
+    /**
+     * Set the number of lines and the associativity
+     */
     void setDimensions(uint sets, uint associativity=1)
     {
         using namespace std;
         m_storage.clear(); //clear out cache before resize
         m_storage.resize(sets);
         for(std::vector<set_t>::iterator i = m_storage.begin(); 
-            i != m_storage.end(); ++i)
+                i != m_storage.end(); ++i)
         {
             i->m_counter = 0;
             i->m_storage.resize(associativity);
         }
     }
-
     // A good use for this is to use bind to have the evict call into
     // a second level caches add. e.g.
     // cacheobject1.setEvictCallBack(
@@ -377,63 +426,64 @@ public:
     // cache.additem(0x123456, data, evicted_addr, evicted_data);
     void additem(uint addr, uint data)
     {
-       using namespace std;
-       uint tag = addrtotag(addr);
+        using namespace std;
+        uint tag = addrtotag(addr);
 
-       vector<line_t>& set = m_storage[addrtoindex(addr)].m_storage; 
-       uint& counter = m_storage[addrtoindex(addr)].m_counter;
+        vector<line_t>& set = m_storage[addrtoindex(addr)].m_storage; 
+        uint& counter = m_storage[addrtoindex(addr)].m_counter;
 
-       uint evaddress = 0;
-       uint evdata = 0;
+        uint evaddress = 0;
+        uint evdata = 0;
 
-       vector<line_t>::iterator it; 
-       it = find(set.begin(), set.end(), tag);
-       if(it != set.end())
-       {
-           it->used = true;
-           it->value = data;
-           return;
-       }
-       else //find an element to evict
-       {
-           while(true)
-           {
-               //increment counter and get element reference
-               counter = (counter + 1) % set.size();
-               line_t& element = set[counter];
+        vector<line_t>::iterator it; 
+        it = find(set.begin(), set.end(), tag);
+        if(it != set.end())
+        {
+            it->used = true;
+            it->value = data;
+            return;
+        }
+        else        //find an element to evict
+        {
+            while(true)
+            {
+                //increment counter and get element reference
+                counter = (counter + 1) % set.size();
+                line_t& element = set[counter];
 
-               //flip used bits
-               element.used = ~element.used;
-               if(element.used == true) // value to be evicted
-               {
-                   evaddress = (addr & (tag << log2(m_storage.size())));
-                   evdata = element.value;
-                   if(evaddress != 0)
-                       m_evictfn(evaddress, evdata);
+                //flip used bits
+                element.used = ~element.used;
+                if(element.used == true)    // value to be evicted
+                {
+                    evaddress = (addr & (tag << log2(m_storage.size())));
+                    evdata = element.value;
+                    if(evaddress != 0)
+                        m_evictfn(evaddress, evdata);
 
-                   element.tag = tag;
-                   element.value = data;
-                   return;
-               }
-           }
-       }
+                    element.tag = tag;
+                    element.value = data;
+                    return;
+                }
+            }
+        }
     }
 
-    //data = cache.getitem(0x12345679);
+    // usage:
+    // data = cache.getitem(0x12345679);
     uint getitem(uint addr)
     {
-       using namespace std;
-       uint tag = addrtotag(addr);
+        using namespace std;
+        uint tag = addrtotag(addr);
 
-       vector<line_t>& set = m_storage[addrtoindex(addr)].m_storage; 
+        vector<line_t>& set = m_storage[addrtoindex(addr)].m_storage; 
 
-       vector<line_t>::iterator it; 
-       it = find(set.begin(), set.end(), tag);
-       if(it != set.end()) // if tag is present just return a reference
-       {   
-           it->used = true;
-           return it->value;
-       }
+        vector<line_t>::iterator it; 
+        it = find(set.begin(), set.end(), tag);
+        if(it != set.end()) // if tag is present just return a reference
+        {   
+            it->used = true;
+            return it->value;
+        }
         return 0;
     }
     //return the Ceil(log2(x))
@@ -443,14 +493,12 @@ public:
         for(i = 0; x >= ((unsigned)1<<i); ++i){}
         return i-1;
     }
-
     uint addrtotag(uint addr)
     {
-       //calc index bit size
+        //calc index bit size
         uint indexbits = log2(m_storage.size());
-       return addr >> indexbits;
+        return addr >> indexbits;
     }
-
     virtual uint addrtoindex(uint addr)
     {
         //calc index bit size and make mask
@@ -461,7 +509,7 @@ public:
         return addr & mask;
     }
 private:
-    struct set_t //set size = sizeof(line_t) + log2(ways)
+    struct set_t    //set size = sizeof(line_t) + log2(ways)
     {
         std::vector<line_t> m_storage;
         uint m_counter;
@@ -482,7 +530,7 @@ private:
 
         bool operator==(const uint x)
         {
-           return (x == this->tag);
+            return (x == this->tag);
         }
     };
 
@@ -490,29 +538,25 @@ private:
     std::tr1::function<void (uint,uint)> m_evictfn;
 };
 
-class PcRelCache: public SetAssociativeCache 
-{
-    virtual uint addrtotag(uint addr)
-    {
-        return addr;
-    }
 
-};
+typedef CircularStack<uint> Callstack;
 
 
 
-
-typedef CircularStack<uint32_t> Callstack;
-static const uint RELATIVE_OFFSET = 1 << 10;
+/**
+ * Predictor Framework Definition
+ */
 
 class PREDICTOR
 {
 public:
     PREDICTOR();  // Default Constructor
     ~PREDICTOR(); // Default Destructor
-    bool get_prediction(const branch_record_c* br, const op_state_c* os, uint *predicted_target_address);
+    bool get_prediction(const branch_record_c* br, 
+            const op_state_c* os, uint *predicted_target_address);
 
-    void update_predictor(const branch_record_c* br, const op_state_c* os, bool taken, uint actual_target_address);
+    void update_predictor(const branch_record_c* br, 
+            const op_state_c* os, bool taken, uint actual_target_address);
 private:
     AlphaPredictor m_AlphaPredictor;
     SetAssociativeCache m_BranchTargetTable;
@@ -523,4 +567,7 @@ private:
 };
 
 #endif // PREDICTOR_H_SEEN
+
+
+// vim: ts=4 et sw=4:
 
