@@ -1,8 +1,8 @@
 \section{Introduction}
-This project simulates the Branch Predictor from the Alpha 21264 and implements a branch target predictor of our design.
+This project simulates the Branch Predictor from the Alpha 21264 and implements a branch target predictor of our own design.
 
 \subsection{Branch Target Prediction}
-The Alpha 21264 predicted branch outcomes using a global predictor, and a local predictor. A tournament predictor would then choose which predictor to use based on path history.
+The Alpha 21264 Microprocessor predicted branch outcomes using a global predictor, and a local predictor. A tournament predictor would then choose which predictor to use based on path history.
 
 \subsection{Branch Target Buffer}
-The Branch Target Buffer uses that uses a PC-relative and a PC-absolute cache. Targets that are close to the current instruction are placed into the PC-relative cache. A circular return stack is used for returns. All caches are exclusive.
+The Branch Target Buffer uses a PC-relative and a PC-absolute cache. Targets that are close to the current instruction are placed into the PC-relative cache. A circular return stack is used for returns. All caches are exclusive.
