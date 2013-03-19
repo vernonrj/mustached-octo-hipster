@@ -5,8 +5,6 @@
 #include <iostream>
 #include <stdint.h>
 #include <stdlib.h>
-#include "SaturationCounter.h"
-#include "TournamentPredictor.h"
 #include "predictor.h"
 
 // tuning parameters
